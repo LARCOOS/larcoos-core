@@ -1,22 +1,225 @@
 // use prisma-8
 
-model Truckload {
-  id             Int      @id @default(autoincrement())
-  code           String   @unique
-  supplier       String
-  retailer       String
-  pallets        Int
-  purchase       Decimal
-  freight        Decimal
-  destination    String
-  status         String   @default("Planned")
+// ============================================================
+// LARCOOS KERNEL v0.1
+// Core organizational, location, actor and event infrastructure.
+// ============================================================
 
-  paymentMethod  String   @default("Unspecified")
-  paymentStatus  String   @default("Unpaid")
+model Organization {
+  id          Int    @id @default(autoincrement())
+  code        String @unique
+  name        String
+  legalName   String?
+  type        String
+  country     String?
+  currency    String?
+
+  isActive Boolean @default(true)
+
+  locations   Location[]
+  actors      Actor[]
+  events      KernelEvent[]
+  truckloads  Truckload[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model Location {
+  id             Int @id @default(autoincrement())
+  organizationId Int
+
+  code    String @unique
+  name    String
+  type    String
+
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  stateRegion  String?
+  postalCode   String?
+  country      String?
+  timezone     String?
+
+  isActive Boolean @default(true)
+
+  organization Organization @relation(
+    fields: [organizationId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  events     KernelEvent[]
+  truckloads Truckload[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@unique([organizationId, name])
+}
+
+model Actor {
+  id             Int
+                   @id
+                   @default(autoincrement())
+
+  organizationId Int?
+
+  code        String @unique
+  displayName String
+  type        String
+
+  email String?
+  phone String?
+
+  isActive Boolean @default(true)
+
+  organization Organization? @relation(
+    fields: [organizationId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  events KernelEvent[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+// ============================================================
+// KERNEL EVENT / AUDIT TRAIL
+//
+// Every important operational action can leave an immutable
+// historical footprint in this table.
+//
+// Examples:
+// TRUCKLOAD_PURCHASED
+// PAYMENT_RECEIVED
+// TRUCK_ARRIVED
+// UNLOADING_STARTED
+// PALLET_UNLOADED
+// UNLOADING_FINISHED
+// ITEM_INSPECTED
+// MANIFEST_CREATED
+// AI_PRICE_RECOMMENDED
+// ITEM_SOLD
+// ============================================================
+
+model KernelEvent {
+  id Int @id @default(autoincrement())
+
+  eventId   String @unique
+  eventType String
+
+  organizationId Int?
+  locationId     Int?
+  actorId        Int?
+
+  entityType String
+  entityId   String
+  entityCode String?
+
+  source String @default("LARCOOS")
+
+  // JSON serialized as text for Kernel v0.1.
+  // Later this can evolve into structured event payload storage.
+  payload String?
+
+  occurredAt TimestamptzString @default(now())
+  createdAt  TimestamptzString @default(now())
+
+  organization Organization? @relation(
+    fields: [organizationId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  location Location? @relation(
+    fields: [locationId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  actor Actor? @relation(
+    fields: [actorId],
+    references: [id],
+    onDelete: SetNull
+  )
+}
+
+// ============================================================
+// LDC — TRUCKLOAD
+// Existing operational model preserved.
+// ============================================================
+
+model Truckload {
+  id          Int    @id @default(autoincrement())
+  code        String @unique
+
+  organizationId Int?
+  locationId     Int?
+
+  supplier    String
+  retailer    String
+  pallets     Int
+  purchase    Decimal
+  freight     Decimal
+  destination String
+  status      String @default("Planned")
+
+  paymentMethod  String @default("Unspecified")
+  paymentStatus  String @default("Unpaid")
   amountPaid     Decimal
   paymentDueDate TimestamptzString?
   paymentCountry String?
 
-  createdAt      TimestamptzString @default(now())
-  updatedAt      temporal.updatedAtString()
+  organization Organization? @relation(
+    fields: [organizationId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  location Location? @relation(
+    fields: [locationId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  palletRecords Pallet[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+// ============================================================
+// LDC — PALLET
+// Existing pallet model preserved.
+// ============================================================
+
+model Pallet {
+  id          Int    @id @default(autoincrement())
+  code        String @unique
+  truckloadId Int
+
+  palletNumber Int
+  status       String @default("Pending")
+
+  description String?
+  category    String?
+  condition   String?
+  notes       String?
+
+  estimatedPieces Int?
+  processedPieces Int @default(0)
+
+  truckload Truckload @relation(
+    fields: [truckloadId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@unique([truckloadId, palletNumber])
 }
