@@ -1,25 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/src/prisma/db";
+import PaymentEditor from "@/components/truckloads/PaymentEditor";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-type TruckloadPageProps = {
+type TruckloadDetailPageProps = {
   params: Promise<{
     code: string;
   }>;
 };
 
-export default async function TruckloadPage({
+export default async function TruckloadDetailPage({
   params,
-}: TruckloadPageProps) {
+}: TruckloadDetailPageProps) {
   const { code } = await params;
 
   const truckload = await db.orm.public.Truckload
-    .where({
-      code: decodeURIComponent(code),
-    })
+    .where({ code })
     .first();
 
   if (!truckload) {
@@ -28,9 +24,14 @@ export default async function TruckloadPage({
 
   const purchase = Number(truckload.purchase);
   const freight = Number(truckload.freight);
+  const amountPaid = Number(truckload.amountPaid);
+
   const landedCost = purchase + freight;
+
   const costPerPallet =
-    truckload.pallets > 0 ? landedCost / truckload.pallets : 0;
+    truckload.pallets > 0
+      ? landedCost / truckload.pallets
+      : 0;
 
   const money = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -38,110 +39,196 @@ export default async function TruckloadPage({
   });
 
   return (
-    <main className="min-h-screen bg-slate-950 p-6 text-white md:p-10">
+    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href="/ldc/truckloads"
-          className="text-sm text-slate-400 transition hover:text-white"
-        >
-          ← Back to Truckloads
-        </Link>
+        <div className="mb-8">
+          <Link
+            href="/ldc/truckloads"
+            className="text-sm font-medium text-slate-400 transition hover:text-white"
+          >
+            ← Back to Truckloads
+          </Link>
+        </div>
 
-        <div className="mt-6 flex flex-col gap-4 border-b border-slate-800 pb-6 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-widest text-slate-500">
-              LDC LLC / Truckload
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+              LARCO Distribution Center
             </p>
 
             <h1 className="mt-2 text-4xl font-bold tracking-tight">
               {truckload.code}
             </h1>
 
-            <p className="mt-2 text-slate-400">
-              {truckload.supplier} · {truckload.retailer}
+            <p className="mt-3 text-slate-400">
+              Complete operational record for this truckload.
             </p>
           </div>
 
-          <span className="w-fit rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold">
-            {truckload.status}
-          </span>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-6 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Operational Status
+            </p>
+
+            <p className="mt-2 text-lg font-semibold">
+              {truckload.status}
+            </p>
+          </div>
         </div>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Metric
-            label="Pallets"
-            value={truckload.pallets.toLocaleString()}
-          />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Supplier
+            </p>
 
-          <Metric
-            label="Purchase"
-            value={money.format(purchase)}
-          />
+            <p className="mt-2 font-semibold">
+              {truckload.supplier}
+            </p>
+          </div>
 
-          <Metric
-            label="Freight"
-            value={money.format(freight)}
-          />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Retailer
+            </p>
 
-          <Metric
-            label="Landed Cost"
-            value={money.format(landedCost)}
-          />
+            <p className="mt-2 font-semibold">
+              {truckload.retailer}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Destination
+            </p>
+
+            <p className="mt-2 font-semibold">
+              {truckload.destination}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Pallets
+            </p>
+
+            <p className="mt-2 text-2xl font-bold">
+              {truckload.pallets}
+            </p>
+          </div>
         </section>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold">
-              Truckload Information
-            </h2>
+        <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Purchase
+            </p>
 
-            <div className="mt-6 grid gap-6 sm:grid-cols-2">
-              <Detail
-                label="Supplier"
-                value={truckload.supplier}
-              />
+            <p className="mt-2 text-xl font-bold">
+              {money.format(purchase)}
+            </p>
+          </div>
 
-              <Detail
-                label="Retailer"
-                value={truckload.retailer}
-              />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Freight
+            </p>
 
-              <Detail
-                label="Destination"
-                value={truckload.destination}
-              />
+            <p className="mt-2 text-xl font-bold">
+              {money.format(freight)}
+            </p>
+          </div>
 
-              <Detail
-                label="Status"
-                value={truckload.status}
-              />
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Landed Cost
+            </p>
 
-              <Detail
-                label="Cost per pallet"
-                value={money.format(costPerPallet)}
-              />
+            <p className="mt-2 text-xl font-bold">
+              {money.format(landedCost)}
+            </p>
+          </div>
 
-              <Detail
-                label="Database ID"
-                value={`#${truckload.id}`}
-              />
-            </div>
-          </section>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Cost / Pallet
+            </p>
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+            <p className="mt-2 text-xl font-bold">
+              {money.format(costPerPallet)}
+            </p>
+          </div>
+        </section>
+
+        <div className="mt-6">
+          <PaymentEditor
+            code={truckload.code}
+            purchase={purchase}
+            initialPaymentMethod={truckload.paymentMethod}
+            initialPaymentStatus={truckload.paymentStatus}
+            initialAmountPaid={amountPaid}
+            initialPaymentDueDate={
+              truckload.paymentDueDate ?? null
+            }
+            initialPaymentCountry={
+              truckload.paymentCountry ?? null
+            }
+          />
+        </div>
+
+        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+          <div>
             <h2 className="text-xl font-semibold">
               Operations
             </h2>
 
-            <div className="mt-6 space-y-3">
-              <Operation label="Receiving" />
-              <Operation label="Processing" />
-              <Operation label="Manifest" />
-              <Operation label="Export" />
-              <Operation label="Delivery to ViDaMar" />
+            <p className="mt-1 text-sm text-slate-400">
+              Processing, manifest, loading and export workflow.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Unloading
+              </p>
+
+              <p className="mt-2 font-semibold">
+                Pending
+              </p>
             </div>
-          </section>
-        </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Processing
+              </p>
+
+              <p className="mt-2 font-semibold">
+                Pending
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Manifest
+              </p>
+
+              <p className="mt-2 font-semibold">
+                Pending
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Export
+              </p>
+
+              <p className="mt-2 font-semibold">
+                Pending
+              </p>
+            </div>
+          </div>
+        </section>
 
         <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
           <h2 className="text-xl font-semibold">
@@ -149,72 +236,25 @@ export default async function TruckloadPage({
           </h2>
 
           <p className="mt-2 text-sm text-slate-400">
-            Pallet-level inventory for this truckload will be managed here.
+            Individual pallet inventory and merchandise records
+            will be connected here.
           </p>
 
-          <div className="mt-6 rounded-xl border border-dashed border-slate-700 p-10 text-center text-slate-500">
-            No pallet inventory registered yet.
+          <div className="mt-6 rounded-xl border border-dashed border-slate-700 bg-slate-950/40 p-8 text-center">
+            <p className="font-medium text-slate-300">
+              {truckload.pallets} pallets registered
+            </p>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Pallet-level inventory module coming next.
+            </p>
           </div>
         </section>
+
+        <div className="mt-6 text-sm text-slate-600">
+          Database ID #{truckload.id}
+        </div>
       </div>
     </main>
-  );
-}
-
-function Metric({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-      <p className="text-sm text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-2 text-2xl font-bold">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function Detail({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-medium text-slate-200">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function Operation({
-  label,
-}: {
-  label: string;
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3">
-      <span className="text-sm text-slate-300">
-        {label}
-      </span>
-
-      <span className="text-xs font-medium text-slate-500">
-        Pending
-      </span>
-    </div>
   );
 }

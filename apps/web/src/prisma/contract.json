@@ -15,6 +15,13 @@
         "models": {
           "Truckload": {
             "fields": {
+              "amountPaid": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
               "code": {
                 "nullable": false,
                 "type": {
@@ -57,6 +64,34 @@
                   "kind": "scalar"
                 }
               },
+              "paymentCountry": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "paymentDueDate": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "paymentMethod": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "paymentStatus": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "purchase": {
                 "nullable": false,
                 "type": {
@@ -96,6 +131,9 @@
             "relations": {},
             "storage": {
               "fields": {
+                "amountPaid": {
+                  "column": "amountPaid"
+                },
                 "code": {
                   "column": "code"
                 },
@@ -113,6 +151,18 @@
                 },
                 "pallets": {
                   "column": "pallets"
+                },
+                "paymentCountry": {
+                  "column": "paymentCountry"
+                },
+                "paymentDueDate": {
+                  "column": "paymentDueDate"
+                },
+                "paymentMethod": {
+                  "column": "paymentMethod"
+                },
+                "paymentStatus": {
+                  "column": "paymentStatus"
                 },
                 "purchase": {
                   "column": "purchase"
@@ -145,6 +195,11 @@
           "table": {
             "truckload": {
               "columns": {
+                "amountPaid": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false
+                },
                 "code": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -181,6 +236,34 @@
                 "pallets": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
+                  "nullable": false
+                },
+                "paymentCountry": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "paymentDueDate": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "paymentMethod": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "Unspecified"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "paymentStatus": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "Unpaid"
+                  },
+                  "nativeType": "text",
                   "nullable": false
                 },
                 "purchase": {
@@ -234,7 +317,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "3acd5feb72d4d2eaf3655edfa22eec39c9d1981792519801b5cde417a790b6ca"
+    "storageHash": "c549b364e9628dace71234b8b1baad772083b161959fbcb00afd5746cac943e1"
   },
   "execution": {
     "executionHash": "d2e747c3242492d6f30821ecaea592b0061422695409b437ca00f10203b66693",

@@ -1,15 +1,22 @@
 // use prisma-8
 
 model Truckload {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique
-  supplier    String
-  retailer    String
-  pallets     Int
-  purchase    Decimal
-  freight     Decimal
-  destination String
-  status      String   @default("Planned")
-  createdAt   TimestamptzString @default(now())
-  updatedAt   temporal.updatedAtString()
+  id             Int      @id @default(autoincrement())
+  code           String   @unique
+  supplier       String
+  retailer       String
+  pallets        Int
+  purchase       Decimal
+  freight        Decimal
+  destination    String
+  status         String   @default("Planned")
+
+  paymentMethod  String   @default("Unspecified")
+  paymentStatus  String   @default("Unpaid")
+  amountPaid     Decimal
+  paymentDueDate TimestamptzString?
+  paymentCountry String?
+
+  createdAt      TimestamptzString @default(now())
+  updatedAt      temporal.updatedAtString()
 }

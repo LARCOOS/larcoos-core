@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'c549b364e9628dace71234b8b1baad772083b161959fbcb00afd5746cac943e1'>;
+  StorageHashBase<'466d6a05dad328c0a309e89e63f1870b0928b627b32cb6822509091253726d76'>;
 export type ExecutionHash =
   ExecutionHashBase<'d2e747c3242492d6f30821ecaea592b0061422695409b437ca00f10203b66693'>;
 export type ProfileHash =
@@ -256,7 +256,6 @@ export type FieldOutputTypes = {
       readonly paymentStatus: CodecTypes['pg/text@1']['output'];
       readonly amountPaid: CodecTypes['pg/numeric@1']['output'];
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly paymentCountry: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -278,7 +277,6 @@ export type FieldInputTypes = {
       readonly paymentStatus: CodecTypes['pg/text@1']['input'];
       readonly amountPaid: CodecTypes['pg/numeric@1']['input'];
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly paymentCountry: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -294,7 +292,6 @@ export type StorageColumnTypes = {
       readonly freight: CodecTypes['pg/numeric@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly pallets: CodecTypes['pg/int4@1']['output'];
-      readonly paymentCountry: CodecTypes['pg/text@1']['output'] | null;
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly paymentMethod: CodecTypes['pg/text@1']['output'];
       readonly paymentStatus: CodecTypes['pg/text@1']['output'];
@@ -316,7 +313,6 @@ export type StorageColumnInputTypes = {
       readonly freight: CodecTypes['pg/numeric@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly pallets: CodecTypes['pg/int4@1']['input'];
-      readonly paymentCountry: CodecTypes['pg/text@1']['input'] | null;
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly paymentMethod: CodecTypes['pg/text@1']['input'];
       readonly paymentStatus: CodecTypes['pg/text@1']['input'];
@@ -344,7 +340,6 @@ export namespace Models {
     paymentStatus: CodecTypes['pg/text@1']['output'];
     amountPaid: CodecTypes['pg/numeric@1']['output'];
     paymentDueDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    paymentCountry: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     readonly [RelationKeys]?: never;
@@ -458,11 +453,6 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-string@1';
                   readonly nullable: true;
                 };
-                readonly paymentCountry: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -554,10 +544,6 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-string@1';
                 };
               };
-              readonly paymentCountry: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -591,7 +577,6 @@ type ContractBase = Omit<
                 readonly paymentStatus: { readonly column: 'paymentStatus' };
                 readonly amountPaid: { readonly column: 'amountPaid' };
                 readonly paymentDueDate: { readonly column: 'paymentDueDate' };
-                readonly paymentCountry: { readonly column: 'paymentCountry' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
