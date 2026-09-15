@@ -1,13 +1,15 @@
 // use prisma-8
 
 // ============================================================
-// LARCOOS KERNEL v0.2
+// LARCOOS KERNEL v0.3
 //
 // Core:
 // Organizations
 // Locations
 // Actors
 // Roles / Permissions
+// Authentication
+// Sessions
 // Kernel Events / Audit Trail
 //
 // Security principle:
@@ -20,6 +22,19 @@
 // Completed records are immutable for normal employees.
 // Authorized managers/admins may correct completed records,
 // but the original action remains preserved in KernelEvent.
+//
+// Authentication principle:
+//
+// Actor = permanent LARCOOS identity.
+// AuthAccount = login credentials.
+// AuthSession = authenticated revocable session.
+//
+// Passwords are NEVER stored directly.
+// AuthAccount.passwordHash stores only a secure password hash.
+//
+// Browser session tokens are NEVER stored directly.
+// AuthSession.tokenHash stores only a cryptographic hash of
+// the opaque session token supplied to the browser.
 // ============================================================
 
 model Organization {
@@ -33,9 +48,9 @@ model Organization {
 
   isActive Boolean @default(true)
 
-  locations Location[]
-  actors    Actor[]
-  events    KernelEvent[]
+  locations  Location[]
+  actors     Actor[]
+  events     KernelEvent[]
   truckloads Truckload[]
 
   createdAt TimestamptzString @default(now())
@@ -91,6 +106,9 @@ model Location {
 // Forklift Operator
 // Warehouse Unloader
 // Supervisor
+//
+// Authentication credentials are NOT stored on Actor.
+// They are stored separately in AuthAccount.
 // ============================================================
 
 model Actor {
@@ -105,8 +123,8 @@ model Actor {
   phone String?
 
   // -----------------------------------------
-// SYSTEM AUTHORIZATION
-// -----------------------------------------
+  // SYSTEM AUTHORIZATION
+  // -----------------------------------------
 
   systemRole String @default("EMPLOYEE")
 
@@ -123,8 +141,95 @@ model Actor {
     onDelete: SetNull
   )
 
-  events           KernelEvent[]
+  authAccount     AuthAccount?
+  events          KernelEvent[]
   unloadingWorkers UnloadingWorker[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+// ============================================================
+// AUTH ACCOUNT
+//
+// One login account per Actor.
+//
+// loginIdentifier is normalized by the application before
+// storing/querying it.
+//
+// Example:
+// victor@larcoos.com
+//
+// passwordHash NEVER contains the original password.
+// The application will use a salted password derivation
+// algorithm and store only its encoded hash.
+//
+// Failed-login tracking supports account lockouts without
+// modifying Actor authorization or audit history.
+// ============================================================
+
+model AuthAccount {
+  id      Int @id @default(autoincrement())
+  actorId Int @unique
+
+  loginIdentifier String @unique
+  passwordHash    String
+
+  isActive Boolean @default(true)
+
+  failedLoginAttempts Int @default(0)
+  lockedUntil         TimestamptzString?
+
+  lastLoginAt       TimestamptzString?
+  passwordChangedAt TimestamptzString?
+
+  actor Actor @relation(
+    fields: [actorId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  sessions AuthSession[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+// ============================================================
+// AUTH SESSION
+//
+// Browser receives a random opaque session token.
+//
+// IMPORTANT:
+// Raw token exists only in the secure browser cookie.
+// Database stores SHA-256(token) as tokenHash.
+//
+// This allows:
+// - logout
+// - forced logout
+// - employee/session revocation
+// - session expiration
+// - credential rotation
+//
+// revokedAt != null means session is no longer valid.
+// expiresAt is always checked server-side.
+// ============================================================
+
+model AuthSession {
+  id        Int @id @default(autoincrement())
+  accountId Int
+
+  tokenHash String @unique
+
+  expiresAt TimestamptzString
+  lastSeenAt TimestamptzString?
+  revokedAt TimestamptzString?
+
+  account AuthAccount @relation(
+    fields: [accountId],
+    references: [id],
+    onDelete: Cascade
+  )
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -151,6 +256,13 @@ model Actor {
 // AUCTION_STARTED
 // ITEM_SOLD
 // CASH_RECEIVED
+//
+// Authentication / security:
+//
+// AUTH_LOGIN_SUCCEEDED
+// AUTH_LOGIN_FAILED
+// AUTH_LOGOUT
+// AUTH_SESSION_REVOKED
 //
 // Administrative corrections:
 //
