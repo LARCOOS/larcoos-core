@@ -223,6 +223,14 @@ const COUNTRIES = [
   "Zimbabwe",
 ];
 
+type SavedPaymentSnapshot = {
+  paymentMethod: string;
+  paymentStatus: string;
+  amountPaid: number;
+  paymentDueDate: string;
+  paymentCountry: string;
+};
+
 export default function PaymentEditor({
   code,
   purchase,
@@ -233,6 +241,12 @@ export default function PaymentEditor({
   initialPaymentCountry = null,
 }: PaymentEditorProps) {
   const router = useRouter();
+
+  const initialDueDate = initialPaymentDueDate
+    ? initialPaymentDueDate.slice(0, 10)
+    : "";
+
+  const initialCountry = initialPaymentCountry ?? "";
 
   const [paymentMethod, setPaymentMethod] = useState(
     initialPaymentMethod
@@ -247,18 +261,24 @@ export default function PaymentEditor({
   );
 
   const [paymentDueDate, setPaymentDueDate] = useState(
-    initialPaymentDueDate
-      ? initialPaymentDueDate.slice(0, 10)
-      : ""
+    initialDueDate
   );
 
   const [paymentCountry, setPaymentCountry] = useState(
-    initialPaymentCountry ?? ""
+    initialCountry
   );
+
+  const [savedSnapshot, setSavedSnapshot] =
+    useState<SavedPaymentSnapshot>({
+      paymentMethod: initialPaymentMethod,
+      paymentStatus: initialPaymentStatus,
+      amountPaid: initialAmountPaid,
+      paymentDueDate: initialDueDate,
+      paymentCountry: initialCountry,
+    });
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
 
   const numericAmountPaid = Number(amountPaid) || 0;
 
@@ -275,14 +295,34 @@ export default function PaymentEditor({
     []
   );
 
+  const hasChanges = useMemo(() => {
+    return (
+      paymentMethod !== savedSnapshot.paymentMethod ||
+      paymentStatus !== savedSnapshot.paymentStatus ||
+      numericAmountPaid !== savedSnapshot.amountPaid ||
+      paymentDueDate !== savedSnapshot.paymentDueDate ||
+      paymentCountry !== savedSnapshot.paymentCountry
+    );
+  }, [
+    paymentMethod,
+    paymentStatus,
+    numericAmountPaid,
+    paymentDueDate,
+    paymentCountry,
+    savedSnapshot,
+  ]);
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
+    if (!hasChanges || saving) {
+      return;
+    }
+
     setSaving(true);
     setError("");
-    setSaved(false);
 
     try {
       const response = await fetch("/api/truckloads", {
@@ -308,7 +348,14 @@ export default function PaymentEditor({
         );
       }
 
-      setSaved(true);
+      setSavedSnapshot({
+        paymentMethod,
+        paymentStatus,
+        amountPaid: numericAmountPaid,
+        paymentDueDate,
+        paymentCountry,
+      });
+
       router.refresh();
     } catch (err) {
       setError(
@@ -323,11 +370,25 @@ export default function PaymentEditor({
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold">
-            Purchase & Payment
-          </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-xl font-semibold">
+              Purchase & Payment
+            </h2>
+
+            {!hasChanges && !error && (
+              <span className="rounded-full border border-emerald-800 bg-emerald-950/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-400">
+                Saved
+              </span>
+            )}
+
+            {hasChanges && !error && (
+              <span className="rounded-full border border-amber-800 bg-amber-950/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-400">
+                Unsaved Changes
+              </span>
+            )}
+          </div>
 
           <p className="mt-1 text-sm text-slate-400">
             Track purchase terms, international payments and
@@ -488,10 +549,14 @@ export default function PaymentEditor({
         <div className="flex items-end">
           <button
             type="submit"
-            disabled={saving}
-            className="w-full rounded-xl bg-white px-5 py-3 font-bold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={saving || !hasChanges}
+            className="w-full rounded-xl bg-white px-5 py-3 font-bold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? "Saving..." : "Save Payment"}
+            {saving
+              ? "Saving..."
+              : hasChanges
+                ? "Save Payment"
+                : "Payment Saved"}
           </button>
         </div>
       </form>
@@ -502,9 +567,15 @@ export default function PaymentEditor({
         </p>
       )}
 
-      {saved && !error && (
+      {!error && !hasChanges && (
         <p className="mt-4 text-sm font-medium text-emerald-400">
-          Payment information saved successfully.
+          Payment information is saved.
+        </p>
+      )}
+
+      {!error && hasChanges && (
+        <p className="mt-4 text-sm font-medium text-amber-400">
+          You have payment changes that have not been saved.
         </p>
       )}
     </section>
