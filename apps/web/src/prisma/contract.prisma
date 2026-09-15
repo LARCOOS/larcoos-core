@@ -1,28 +1,50 @@
 // use prisma-8
 
 // ============================================================
-// LARCOOS KERNEL v0.1
+// LARCOOS KERNEL v0.2
+//
+// Core:
+// Organizations
+// Locations
+// Actors
+// Roles / Permissions
+// Kernel Events / Audit Trail
+//
+// Security principle:
+// Operational role != system authorization.
+//
+// Example:
+// A person may work as "Forklift Operator" during unloading
+// while their system role is EMPLOYEE.
+//
+// Completed records are immutable for normal employees.
+// Authorized managers/admins may correct completed records,
+// but the original action remains preserved in KernelEvent.
 // ============================================================
 
 model Organization {
-  id          Int    @id @default(autoincrement())
-  code        String @unique
-  name        String
-  legalName   String?
-  type        String
-  country     String?
-  currency    String?
+  id        Int    @id @default(autoincrement())
+  code      String @unique
+  name      String
+  legalName String?
+  type      String
+  country   String?
+  currency  String?
 
   isActive Boolean @default(true)
 
-  locations   Location[]
-  actors      Actor[]
-  events      KernelEvent[]
-  truckloads  Truckload[]
+  locations Location[]
+  actors    Actor[]
+  events    KernelEvent[]
+  truckloads Truckload[]
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
 }
+
+// ============================================================
+// LOCATION
+// ============================================================
 
 model Location {
   id             Int @id @default(autoincrement())
@@ -57,6 +79,20 @@ model Location {
   @@unique([organizationId, name])
 }
 
+// ============================================================
+// ACTOR
+//
+// Actor represents a person/system identity.
+//
+// IMPORTANT:
+// systemRole controls authorization inside LARCOOS.
+// It is different from operational roles such as:
+// Receiver
+// Forklift Operator
+// Warehouse Unloader
+// Supervisor
+// ============================================================
+
 model Actor {
   id             Int @id @default(autoincrement())
   organizationId Int?
@@ -67,6 +103,17 @@ model Actor {
 
   email String?
   phone String?
+
+  // -----------------------------------------
+// SYSTEM AUTHORIZATION
+// -----------------------------------------
+
+  systemRole String @default("EMPLOYEE")
+
+  canEditCompletedRecords Boolean @default(false)
+  canManageUsers          Boolean @default(false)
+  canApproveFinancials    Boolean @default(false)
+  canManageKernel         Boolean @default(false)
 
   isActive Boolean @default(true)
 
@@ -84,7 +131,42 @@ model Actor {
 }
 
 // ============================================================
-// KERNEL EVENT / AUDIT TRAIL
+// KERNEL EVENT / IMMUTABLE AUDIT TRAIL
+//
+// Important actions leave a footprint.
+//
+// Examples:
+//
+// TRUCKLOAD_PURCHASED
+// PAYMENT_RECEIVED
+// TRUCK_RECEIVED
+// UNLOADING_STARTED
+// PALLET_UNLOADED
+// UNLOADING_FINISHED
+// ITEM_INSPECTED
+// PALLET_PROCESSED
+// MANIFEST_CREATED
+// AI_PRICE_RECOMMENDED
+// INVENTORY_TRANSFERRED_TO_VIDAMAR
+// AUCTION_STARTED
+// ITEM_SOLD
+// CASH_RECEIVED
+//
+// Administrative corrections:
+//
+// COMPLETED_RECORD_EDIT_REQUESTED
+// COMPLETED_RECORD_CORRECTED
+//
+// payload may preserve:
+//
+// {
+//   "reason": "...",
+//   "before": {...},
+//   "after": {...},
+//   "authorizedBy": "..."
+// }
+//
+// KernelEvent should be treated as append-only history.
 // ============================================================
 
 model KernelEvent {
@@ -101,7 +183,8 @@ model KernelEvent {
   entityId   String
   entityCode String?
 
-  source  String @default("LARCOOS")
+  source String @default("LARCOOS")
+
   payload String?
 
   occurredAt TimestamptzString @default(now())
@@ -128,6 +211,27 @@ model KernelEvent {
 
 // ============================================================
 // LDC — TRUCKLOAD
+//
+// Operational lifecycle:
+//
+// Planned
+// Purchased
+// Shipping
+// Received
+// Unloading
+// Unloaded
+// Processing
+// Processed
+// Manifested
+// Ready for Sale
+// Selling
+// Sold
+//
+// Payment lifecycle is separate:
+//
+// Unpaid
+// Partial
+// Paid in Full
 // ============================================================
 
 model Truckload {
@@ -143,7 +247,12 @@ model Truckload {
   purchase    Decimal
   freight     Decimal
   destination String
-  status      String @default("Planned")
+
+  status String @default("Planned")
+
+  // -----------------------------------------
+  // PAYMENT
+  // -----------------------------------------
 
   paymentMethod  String @default("Unspecified")
   paymentStatus  String @default("Unpaid")
@@ -180,7 +289,8 @@ model Pallet {
   truckloadId Int
 
   palletNumber Int
-  status       String @default("Pending")
+
+  status String @default("Pending")
 
   description String?
   category    String?
@@ -208,12 +318,22 @@ model Pallet {
 // One receiving record per truckload.
 //
 // Lifecycle:
+//
 // Shipping
 //   -> Received
 //   -> Unloading
 //   -> Unloaded
 //
-// Kernel events will preserve the historical footprint.
+// Once unloading is completed, operational information should
+// normally be considered locked.
+//
+// A Manager/Admin correction must:
+//
+// 1. Verify authorization.
+// 2. Require a reason.
+// 3. Preserve old values.
+// 4. Apply corrected values.
+// 5. Create COMPLETED_RECORD_CORRECTED KernelEvent.
 // ============================================================
 
 model TruckReceiving {
@@ -248,6 +368,7 @@ model TruckReceiving {
 
   // Stored when known/calculated so historical
   // reports preserve the value used at the time.
+
   costPerMile   Decimal?
   costPerPallet Decimal?
 
@@ -288,13 +409,18 @@ model TruckReceiving {
 // ============================================================
 // LDC — UNLOADING WORKERS
 //
-// Employees participating in the unloading operation.
+// Operational role only.
 //
 // Examples:
+//
 // Forklift Operator
 // Warehouse Unloader
 // Receiver
 // Supervisor
+//
+// This role DOES NOT grant system permissions.
+// System authorization comes from Actor.systemRole and
+// Actor permission flags.
 // ============================================================
 
 model UnloadingWorker {

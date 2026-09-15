@@ -43,6 +43,34 @@
         "models": {
           "Actor": {
             "fields": {
+              "canApproveFinancials": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canEditCompletedRecords": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canManageKernel": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canManageUsers": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
               "code": {
                 "nullable": false,
                 "type": {
@@ -94,6 +122,13 @@
               },
               "phone": {
                 "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "systemRole": {
+                "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -164,6 +199,18 @@
             },
             "storage": {
               "fields": {
+                "canApproveFinancials": {
+                  "column": "canApproveFinancials"
+                },
+                "canEditCompletedRecords": {
+                  "column": "canEditCompletedRecords"
+                },
+                "canManageKernel": {
+                  "column": "canManageKernel"
+                },
+                "canManageUsers": {
+                  "column": "canManageUsers"
+                },
                 "code": {
                   "column": "code"
                 },
@@ -187,6 +234,9 @@
                 },
                 "phone": {
                   "column": "phone"
+                },
+                "systemRole": {
+                  "column": "systemRole"
                 },
                 "type": {
                   "column": "type"
@@ -1660,6 +1710,42 @@
           "table": {
             "actor": {
               "columns": {
+                "canApproveFinancials": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canEditCompletedRecords": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canManageKernel": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canManageUsers": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
                 "code": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1711,6 +1797,15 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
+                },
+                "systemRole": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EMPLOYEE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
                 },
                 "type": {
                   "codecId": "pg/text@1",
@@ -2799,7 +2894,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "b30849fcc4fb13c183eb3375f75125b3fea54a5384c68c853d12eea81a674c8f"
+    "storageHash": "59ce9f71786b5fcbb7b535f3c04faabd226ea7022724436a78b6c9087afc288f"
   },
   "execution": {
     "executionHash": "249324feac2592965ab014f1da6c893557c3b2002e8c9c2f36552b7c2f131db5",

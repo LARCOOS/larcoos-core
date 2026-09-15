@@ -26,6 +26,12 @@ export async function POST() {
       });
     }
 
+    if (!ldc) {
+      throw new Error(
+        "LDC organization could not be initialized."
+      );
+    }
+
     // =========================================================
     // 2. LOCATION — ALICE LDC
     // =========================================================
@@ -48,23 +54,71 @@ export async function POST() {
       });
     }
 
+    if (!aliceLdc) {
+      throw new Error(
+        "Alice Distribution Center could not be initialized."
+      );
+    }
+
     // =========================================================
-    // 3. INITIAL ACTOR
+    // 3. OWNER / ADMIN ACTOR
+    //
+    // Operational roles are separate from system authorization.
+    //
+    // LARCO-ADMIN-001 is the bootstrap owner identity.
     // =========================================================
 
-    let admin = await db.orm.public.Actor
+    const existingAdmin = await db.orm.public.Actor
       .where({ code: "LARCO-ADMIN-001" })
       .first();
 
-    if (!admin) {
-      admin = await db.orm.public.Actor.create({
+    if (!existingAdmin) {
+      await db.orm.public.Actor.create({
         organizationId: ldc.id,
         code: "LARCO-ADMIN-001",
         displayName: "Victor Manuel Orozco Aguilar",
         type: "Owner / Manager",
+
+        systemRole: "OWNER_ADMIN",
+        canEditCompletedRecords: true,
+        canManageUsers: true,
+        canApproveFinancials: true,
+        canManageKernel: true,
+
         isActive: true,
       });
+    } else {
+      await db.orm.public.Actor
+        .where({ id: existingAdmin.id })
+        .update({
+          organizationId: ldc.id,
+          type: "Owner / Manager",
+
+          systemRole: "OWNER_ADMIN",
+          canEditCompletedRecords: true,
+          canManageUsers: true,
+          canApproveFinancials: true,
+          canManageKernel: true,
+
+          isActive: true,
+        });
     }
+
+    // Read the actor again after create/update.
+    // This gives the rest of the bootstrap one verified,
+    // non-null administrative identity.
+
+    const adminRecord = await db.orm.public.Actor
+      .where({ code: "LARCO-ADMIN-001" })
+      .first();
+
+    if (!adminRecord) {
+      throw new Error(
+        "OWNER_ADMIN actor could not be initialized."
+      );
+    }
+
+    const admin = adminRecord;
 
     // =========================================================
     // 4. CONNECT EXISTING TRUCKLOADS TO THE KERNEL
@@ -93,7 +147,9 @@ export async function POST() {
     }
 
     // =========================================================
-    // 5. FIRST KERNEL EVENT
+    // 5. ORIGINAL KERNEL BOOTSTRAP EVENT
+    //
+    // Never rewrite the original historical bootstrap event.
     // =========================================================
 
     let bootstrapEvent = await db.orm.public.KernelEvent
@@ -101,41 +157,107 @@ export async function POST() {
       .first();
 
     if (!bootstrapEvent) {
-      bootstrapEvent = await db.orm.public.KernelEvent.create({
-        eventId: "KERNEL-BOOTSTRAP-0001",
-        eventType: "KERNEL_BOOTSTRAPPED",
+      bootstrapEvent =
+        await db.orm.public.KernelEvent.create({
+          eventId: "KERNEL-BOOTSTRAP-0001",
+          eventType: "KERNEL_BOOTSTRAPPED",
 
-        organizationId: ldc.id,
-        locationId: aliceLdc.id,
-        actorId: admin.id,
+          organizationId: ldc.id,
+          locationId: aliceLdc.id,
+          actorId: admin.id,
 
-        entityType: "SYSTEM",
-        entityId: "LARCOOS",
-        entityCode: "LARCOOS-KERNEL",
+          entityType: "SYSTEM",
+          entityId: "LARCOOS",
+          entityCode: "LARCOOS-KERNEL",
 
-        source: "LARCOOS",
+          source: "LARCOOS",
 
-        payload: JSON.stringify({
-          kernelVersion: "0.1",
-          organization: ldc.code,
-          location: aliceLdc.code,
-          initializedBy: admin.code,
-          purpose:
-            "Initialize the LARCOOS organizational and event kernel.",
-        }),
-      });
+          payload: JSON.stringify({
+            kernelVersion: "0.1",
+            organization: ldc.code,
+            location: aliceLdc.code,
+            initializedBy: admin.code,
+            purpose:
+              "Initialize the LARCOOS organizational and event kernel.",
+          }),
+        });
+    }
+
+    if (!bootstrapEvent) {
+      throw new Error(
+        "Kernel bootstrap event could not be initialized."
+      );
     }
 
     // =========================================================
-    // RESULT
+    // 6. KERNEL v0.2 — RBAC INITIALIZATION EVENT
+    //
+    // This is a new event rather than a modification of the
+    // original bootstrap event.
+    // =========================================================
+
+    let rbacEvent = await db.orm.public.KernelEvent
+      .where({ eventId: "KERNEL-RBAC-0001" })
+      .first();
+
+    if (!rbacEvent) {
+      rbacEvent =
+        await db.orm.public.KernelEvent.create({
+          eventId: "KERNEL-RBAC-0001",
+          eventType: "KERNEL_RBAC_INITIALIZED",
+
+          organizationId: ldc.id,
+          locationId: aliceLdc.id,
+          actorId: admin.id,
+
+          entityType: "SYSTEM",
+          entityId: "LARCOOS",
+          entityCode: "LARCOOS-KERNEL",
+
+          source: "LARCOOS",
+
+          payload: JSON.stringify({
+            kernelVersion: "0.2",
+            authorizationModel: "RBAC",
+
+            ownerActor: admin.code,
+            ownerSystemRole: "OWNER_ADMIN",
+
+            permissions: {
+              canEditCompletedRecords: true,
+              canManageUsers: true,
+              canApproveFinancials: true,
+              canManageKernel: true,
+            },
+
+            principles: [
+              "Operational roles are separate from system authorization.",
+              "Completed records are locked for normal employees.",
+              "Authorized corrections require a reason.",
+              "Authorized corrections preserve before and after values.",
+              "Kernel history is append-only.",
+            ],
+          }),
+        });
+    }
+
+    if (!rbacEvent) {
+      throw new Error(
+        "Kernel RBAC event could not be initialized."
+      );
+    }
+
+    // =========================================================
+    // 7. RESULT
     // =========================================================
 
     return NextResponse.json({
       success: true,
 
       kernel: {
-        version: "0.1",
+        version: "0.2",
         status: "ACTIVE",
+        authorization: "RBAC",
       },
 
       organization: {
@@ -154,6 +276,18 @@ export async function POST() {
         id: admin.id,
         code: admin.code,
         displayName: admin.displayName,
+        systemRole: admin.systemRole,
+
+        permissions: {
+          canEditCompletedRecords:
+            admin.canEditCompletedRecords,
+          canManageUsers:
+            admin.canManageUsers,
+          canApproveFinancials:
+            admin.canApproveFinancials,
+          canManageKernel:
+            admin.canManageKernel,
+        },
       },
 
       truckloads: {
@@ -167,9 +301,19 @@ export async function POST() {
         eventType: bootstrapEvent.eventType,
         occurredAt: bootstrapEvent.occurredAt,
       },
+
+      rbacEvent: {
+        id: rbacEvent.id,
+        eventId: rbacEvent.eventId,
+        eventType: rbacEvent.eventType,
+        occurredAt: rbacEvent.occurredAt,
+      },
     });
   } catch (error) {
-    console.error("POST /api/kernel/bootstrap failed:", error);
+    console.error(
+      "POST /api/kernel/bootstrap failed:",
+      error
+    );
 
     return NextResponse.json(
       {
