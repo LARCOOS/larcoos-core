@@ -2,7 +2,6 @@
 
 // ============================================================
 // LARCOOS KERNEL v0.1
-// Core organizational, location, actor and event infrastructure.
 // ============================================================
 
 model Organization {
@@ -29,9 +28,9 @@ model Location {
   id             Int @id @default(autoincrement())
   organizationId Int
 
-  code    String @unique
-  name    String
-  type    String
+  code String @unique
+  name String
+  type String
 
   addressLine1 String?
   addressLine2 String?
@@ -59,10 +58,7 @@ model Location {
 }
 
 model Actor {
-  id             Int
-                   @id
-                   @default(autoincrement())
-
+  id             Int @id @default(autoincrement())
   organizationId Int?
 
   code        String @unique
@@ -80,7 +76,8 @@ model Actor {
     onDelete: SetNull
   )
 
-  events KernelEvent[]
+  events           KernelEvent[]
+  unloadingWorkers UnloadingWorker[]
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -88,21 +85,6 @@ model Actor {
 
 // ============================================================
 // KERNEL EVENT / AUDIT TRAIL
-//
-// Every important operational action can leave an immutable
-// historical footprint in this table.
-//
-// Examples:
-// TRUCKLOAD_PURCHASED
-// PAYMENT_RECEIVED
-// TRUCK_ARRIVED
-// UNLOADING_STARTED
-// PALLET_UNLOADED
-// UNLOADING_FINISHED
-// ITEM_INSPECTED
-// MANIFEST_CREATED
-// AI_PRICE_RECOMMENDED
-// ITEM_SOLD
 // ============================================================
 
 model KernelEvent {
@@ -119,10 +101,7 @@ model KernelEvent {
   entityId   String
   entityCode String?
 
-  source String @default("LARCOOS")
-
-  // JSON serialized as text for Kernel v0.1.
-  // Later this can evolve into structured event payload storage.
+  source  String @default("LARCOOS")
   payload String?
 
   occurredAt TimestamptzString @default(now())
@@ -149,12 +128,11 @@ model KernelEvent {
 
 // ============================================================
 // LDC — TRUCKLOAD
-// Existing operational model preserved.
 // ============================================================
 
 model Truckload {
-  id          Int    @id @default(autoincrement())
-  code        String @unique
+  id   Int    @id @default(autoincrement())
+  code String @unique
 
   organizationId Int?
   locationId     Int?
@@ -186,6 +164,7 @@ model Truckload {
   )
 
   palletRecords Pallet[]
+  receiving     TruckReceiving?
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -193,7 +172,6 @@ model Truckload {
 
 // ============================================================
 // LDC — PALLET
-// Existing pallet model preserved.
 // ============================================================
 
 model Pallet {
@@ -222,4 +200,132 @@ model Pallet {
   updatedAt temporal.updatedAtString()
 
   @@unique([truckloadId, palletNumber])
+}
+
+// ============================================================
+// LDC — RECEIVING / UNLOADING
+//
+// One receiving record per truckload.
+//
+// Lifecycle:
+// Shipping
+//   -> Received
+//   -> Unloading
+//   -> Unloaded
+//
+// Kernel events will preserve the historical footprint.
+// ============================================================
+
+model TruckReceiving {
+  id          Int @id @default(autoincrement())
+  truckloadId Int @unique
+
+  // -----------------------------------------
+  // ARRIVAL
+  // -----------------------------------------
+
+  receivedAt TimestamptzString?
+
+  originName    String?
+  originCity    String?
+  originState   String?
+  originCountry String?
+
+  carrierName String?
+  driverName  String?
+  driverPhone String?
+
+  truckNumber   String?
+  trailerNumber String?
+
+  // -----------------------------------------
+  // FREIGHT / TRANSPORT METRICS
+  // -----------------------------------------
+
+  distanceMiles Int?
+
+  freightCost Decimal?
+
+  // Stored when known/calculated so historical
+  // reports preserve the value used at the time.
+  costPerMile   Decimal?
+  costPerPallet Decimal?
+
+  // -----------------------------------------
+  // UNLOADING TIMER
+  // -----------------------------------------
+
+  unloadingStartedAt  TimestamptzString?
+  unloadingFinishedAt TimestamptzString?
+
+  unloadingSeconds Int?
+
+  palletsExpected Int?
+  palletsUnloaded Int @default(0)
+
+  // -----------------------------------------
+  // EQUIPMENT / OPERATION
+  // -----------------------------------------
+
+  forkliftUsed Boolean @default(false)
+  forkliftName String?
+
+  dockDoor String?
+  notes    String?
+
+  truckload Truckload @relation(
+    fields: [truckloadId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  workers UnloadingWorker[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+// ============================================================
+// LDC — UNLOADING WORKERS
+//
+// Employees participating in the unloading operation.
+//
+// Examples:
+// Forklift Operator
+// Warehouse Unloader
+// Receiver
+// Supervisor
+// ============================================================
+
+model UnloadingWorker {
+  id          Int @id @default(autoincrement())
+  receivingId Int
+  actorId     Int?
+
+  workerName String
+  role       String
+
+  startedAt  TimestamptzString?
+  finishedAt TimestamptzString?
+
+  workSeconds Int?
+
+  notes String?
+
+  receiving TruckReceiving @relation(
+    fields: [receivingId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  actor Actor? @relation(
+    fields: [actorId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@unique([receivingId, workerName, role])
 }
