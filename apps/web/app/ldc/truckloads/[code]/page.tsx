@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/src/prisma/db";
+
 import PaymentEditor from "@/components/truckloads/PaymentEditor";
+import ReceivingPanel from "@/components/truckloads/ReceivingPanel";
+import PalletGrid from "@/components/truckloads/PalletGrid";
 
 type TruckloadDetailPageProps = {
   params: Promise<{
@@ -22,6 +25,11 @@ export default async function TruckloadDetailPage({
     notFound();
   }
 
+  const pallets = await db.orm.public.Pallet
+    .where({ truckloadId: truckload.id })
+    .orderBy((p) => p.palletNumber.asc())
+    .all();
+
   const purchase = Number(truckload.purchase);
   const freight = Number(truckload.freight);
   const amountPaid = Number(truckload.amountPaid);
@@ -41,6 +49,8 @@ export default async function TruckloadDetailPage({
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-7xl">
+        {/* NAVIGATION */}
+
         <div className="mb-8">
           <Link
             href="/ldc/truckloads"
@@ -49,6 +59,8 @@ export default async function TruckloadDetailPage({
             ← Back to Truckloads
           </Link>
         </div>
+
+        {/* HEADER */}
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -76,96 +88,71 @@ export default async function TruckloadDetailPage({
           </div>
         </div>
 
+        {/* TRUCKLOAD INFORMATION */}
+
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Supplier
-            </p>
+          <InfoCard
+            label="Supplier"
+            value={truckload.supplier}
+          />
 
-            <p className="mt-2 font-semibold">
-              {truckload.supplier}
-            </p>
-          </div>
+          <InfoCard
+            label="Retailer"
+            value={truckload.retailer}
+          />
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Retailer
-            </p>
+          <InfoCard
+            label="Destination"
+            value={truckload.destination}
+          />
 
-            <p className="mt-2 font-semibold">
-              {truckload.retailer}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Destination
-            </p>
-
-            <p className="mt-2 font-semibold">
-              {truckload.destination}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Pallets
-            </p>
-
-            <p className="mt-2 text-2xl font-bold">
-              {truckload.pallets}
-            </p>
-          </div>
+          <InfoCard
+            label="Pallets"
+            value={String(truckload.pallets)}
+            large
+          />
         </section>
+
+        {/* COSTS */}
 
         <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Purchase
-            </p>
+          <InfoCard
+            label="Purchase"
+            value={money.format(purchase)}
+            large
+          />
 
-            <p className="mt-2 text-xl font-bold">
-              {money.format(purchase)}
-            </p>
-          </div>
+          <InfoCard
+            label="Freight"
+            value={money.format(freight)}
+            large
+          />
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Freight
-            </p>
+          <InfoCard
+            label="Landed Cost"
+            value={money.format(landedCost)}
+            large
+          />
 
-            <p className="mt-2 text-xl font-bold">
-              {money.format(freight)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Landed Cost
-            </p>
-
-            <p className="mt-2 text-xl font-bold">
-              {money.format(landedCost)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Cost / Pallet
-            </p>
-
-            <p className="mt-2 text-xl font-bold">
-              {money.format(costPerPallet)}
-            </p>
-          </div>
+          <InfoCard
+            label="Cost / Pallet"
+            value={money.format(costPerPallet)}
+            large
+          />
         </section>
+
+        {/* PAYMENT */}
 
         <div className="mt-6">
           <PaymentEditor
             code={truckload.code}
             purchase={purchase}
-            initialPaymentMethod={truckload.paymentMethod}
-            initialPaymentStatus={truckload.paymentStatus}
+            initialPaymentMethod={
+              truckload.paymentMethod
+            }
+            initialPaymentStatus={
+              truckload.paymentStatus
+            }
             initialAmountPaid={amountPaid}
             initialPaymentDueDate={
               truckload.paymentDueDate ?? null
@@ -175,6 +162,16 @@ export default async function TruckloadDetailPage({
             }
           />
         </div>
+
+        {/* RECEIVING & UNLOADING */}
+
+        <div className="mt-6">
+          <ReceivingPanel
+            truckloadCode={truckload.code}
+          />
+        </div>
+
+        {/* OPERATIONS */}
 
         <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
           <div>
@@ -188,73 +185,100 @@ export default async function TruckloadDetailPage({
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Unloading
-              </p>
+            <OperationCard
+              label="Unloading"
+              value={
+                truckload.status === "Unloaded"
+                  ? "Completed"
+                  : truckload.status === "Unloading"
+                    ? "In Progress"
+                    : "Pending"
+              }
+            />
 
-              <p className="mt-2 font-semibold">
-                Pending
-              </p>
-            </div>
+            <OperationCard
+              label="Processing"
+              value="Pending"
+            />
 
-            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Processing
-              </p>
+            <OperationCard
+              label="Manifest"
+              value="Pending"
+            />
 
-              <p className="mt-2 font-semibold">
-                Pending
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Manifest
-              </p>
-
-              <p className="mt-2 font-semibold">
-                Pending
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Export
-              </p>
-
-              <p className="mt-2 font-semibold">
-                Pending
-              </p>
-            </div>
+            <OperationCard
+              label="Export"
+              value="Pending"
+            />
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-          <h2 className="text-xl font-semibold">
-            Inventory & Pallets
-          </h2>
+        {/* INVENTORY & PALLETS */}
 
-          <p className="mt-2 text-sm text-slate-400">
-            Individual pallet inventory and merchandise records
-            will be connected here.
-          </p>
+        <div className="mt-6">
+          <PalletGrid
+            truckloadCode={truckload.code}
+            expectedPallets={truckload.pallets}
+            pallets={pallets}
+          />
+        </div>
 
-          <div className="mt-6 rounded-xl border border-dashed border-slate-700 bg-slate-950/40 p-8 text-center">
-            <p className="font-medium text-slate-300">
-              {truckload.pallets} pallets registered
-            </p>
+        {/* SYSTEM FOOTER */}
 
-            <p className="mt-2 text-sm text-slate-500">
-              Pallet-level inventory module coming next.
-            </p>
-          </div>
-        </section>
-
-        <div className="mt-6 text-sm text-slate-600">
-          Database ID #{truckload.id}
+        <div className="mt-8 border-t border-slate-900 pt-5 text-xs text-slate-600">
+          <span>
+            LARCOOS Kernel • Truckload Database ID #
+            {truckload.id}
+          </span>
         </div>
       </div>
     </main>
+  );
+}
+
+function InfoCard({
+  label,
+  value,
+  large = false,
+}: {
+  label: string;
+  value: string;
+  large?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        {label}
+      </p>
+
+      <p
+        className={[
+          "mt-2 font-semibold",
+          large ? "text-xl font-bold" : "",
+        ].join(" ")}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function OperationCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        {label}
+      </p>
+
+      <p className="mt-2 font-semibold">
+        {value}
+      </p>
+    </div>
   );
 }
