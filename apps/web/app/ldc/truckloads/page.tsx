@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
 type ApiTruckload = {
@@ -27,7 +28,6 @@ type Truckload = {
   destination: string;
   status: string;
 };
-
 function normalizeTruckload(load: ApiTruckload): Truckload {
   return {
     id: load.id,
@@ -41,6 +41,7 @@ function normalizeTruckload(load: ApiTruckload): Truckload {
     status: load.status,
   };
 }
+   
 
 export default function TruckloadsPage() {
   const [truckloads, setTruckloads] = useState<Truckload[]>([]);
@@ -289,9 +290,14 @@ export default function TruckloadsPage() {
                         key={load.id}
                         className="border-t border-neutral-800"
                       >
-                        <td className="px-6 py-5 font-semibold">
-                          {load.code}
-                        </td>
+                      <td className="px-6 py-5 font-semibold">
+  <Link
+    href={`/ldc/truckloads/${encodeURIComponent(load.code)}`}
+    className="transition hover:underline"
+  >
+    {load.code}
+  </Link>
+</td>
 
                         <td className="px-6 py-5">
                           {load.supplier}
