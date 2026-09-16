@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/src/prisma/db";
 import { randomUUID } from "crypto";
 import { getAuthenticatedActor } from "@/src/kernel/session";
-import { authorizeOrganizationAccess } from "@/src/kernel/authorization";
+import { authorizeOrganizationAccess, requireCompletedRecordMembershipEditPermission, requireEditReason } from "@/src/kernel/authorization";
+import { recordCompletedRecordCorrection } from "@/src/kernel/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -199,7 +200,7 @@ export async function POST(request: Request) {
 
     const actor = await getAuthenticatedActor();
 
-    await authorizeOrganizationAccess({
+    const { membership } = await authorizeOrganizationAccess({
       actorId: actor.id,
       organizationId: truckload.organizationId,
     });
@@ -1021,6 +1022,185 @@ export async function POST(request: Request) {
               : Number(
                   minutesPerPallet.toFixed(2)
                 ),
+        },
+      });
+    }
+
+
+    // =========================================================
+    // CORRECT COMPLETED RECEIVING RECORD
+    // =========================================================
+
+    if (action === "correct-completed") {
+      if (truckload.status !== "Unloaded") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Only completed unloading records can be corrected with this action",
+          },
+          { status: 409 }
+        );
+      }
+
+      requireCompletedRecordMembershipEditPermission(
+        membership
+      );
+
+      const reason = requireEditReason(body.reason);
+
+      const receiving =
+        await db.orm.public.TruckReceiving
+          .where({ truckloadId: truckload.id })
+          .first();
+
+      if (!receiving) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Receiving record not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      const before = {
+        originName: receiving.originName,
+        originCity: receiving.originCity,
+        originState: receiving.originState,
+        originCountry: receiving.originCountry,
+        carrierName: receiving.carrierName,
+        driverName: receiving.driverName,
+        driverPhone: receiving.driverPhone,
+        truckNumber: receiving.truckNumber,
+        trailerNumber: receiving.trailerNumber,
+        distanceMiles: receiving.distanceMiles,
+        freightCost: receiving.freightCost === null ? null : String(receiving.freightCost),
+        costPerMile: receiving.costPerMile === null ? null : String(receiving.costPerMile),
+        costPerPallet: receiving.costPerPallet === null ? null : String(receiving.costPerPallet),
+        forkliftUsed: receiving.forkliftUsed,
+        forkliftName: receiving.forkliftName,
+        dockDoor: receiving.dockDoor,
+        notes: receiving.notes,
+      };
+
+      const textOrNull = (value: unknown) => {
+        if (value === undefined) return undefined;
+        const normalized = String(value ?? "").trim();
+        return normalized || null;
+      };
+
+      const optionalInteger = (value: unknown) => {
+        if (value === undefined) return undefined;
+        if (value === null || value === "") return null;
+        const parsed = Number(value);
+        if (!Number.isInteger(parsed) || parsed < 0) {
+          throw new Error("distanceMiles must be a non-negative integer");
+        }
+        return parsed;
+      };
+
+      const optionalDecimal = (value: unknown) => {
+        if (value === undefined) return undefined;
+        if (value === null || value === "") return null;
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed) || parsed < 0) {
+          throw new Error("Cost values must be non-negative numbers");
+        }
+        return String(parsed);
+      };
+
+      const changes = {
+        originName: textOrNull(body.originName),
+        originCity: textOrNull(body.originCity),
+        originState: textOrNull(body.originState),
+        originCountry: textOrNull(body.originCountry),
+        carrierName: textOrNull(body.carrierName),
+        driverName: textOrNull(body.driverName),
+        driverPhone: textOrNull(body.driverPhone),
+        truckNumber: textOrNull(body.truckNumber),
+        trailerNumber: textOrNull(body.trailerNumber),
+        distanceMiles: optionalInteger(body.distanceMiles),
+        freightCost: optionalDecimal(body.freightCost),
+        costPerMile: optionalDecimal(body.costPerMile),
+        costPerPallet: optionalDecimal(body.costPerPallet),
+        forkliftUsed: body.forkliftUsed === undefined ? undefined : Boolean(body.forkliftUsed),
+        forkliftName: textOrNull(body.forkliftName),
+        dockDoor: textOrNull(body.dockDoor),
+        notes: textOrNull(body.notes),
+      };
+
+      const updateData = Object.fromEntries(
+        Object.entries(changes).filter(
+          ([, value]) => value !== undefined
+        )
+      );
+
+      if (Object.keys(updateData).length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "At least one correction field is required",
+          },
+          { status: 400 }
+        );
+      }
+
+      const updatedReceiving =
+        await db.orm.public.TruckReceiving
+          .where({ id: receiving.id })
+          .update(updateData);
+
+      if (!updatedReceiving) {
+        throw new Error("Receiving correction could not be saved");
+      }
+
+      const after = {
+        originName: updatedReceiving.originName,
+        originCity: updatedReceiving.originCity,
+        originState: updatedReceiving.originState,
+        originCountry: updatedReceiving.originCountry,
+        carrierName: updatedReceiving.carrierName,
+        driverName: updatedReceiving.driverName,
+        driverPhone: updatedReceiving.driverPhone,
+        truckNumber: updatedReceiving.truckNumber,
+        trailerNumber: updatedReceiving.trailerNumber,
+        distanceMiles: updatedReceiving.distanceMiles,
+        freightCost: updatedReceiving.freightCost === null ? null : String(updatedReceiving.freightCost),
+        costPerMile: updatedReceiving.costPerMile === null ? null : String(updatedReceiving.costPerMile),
+        costPerPallet: updatedReceiving.costPerPallet === null ? null : String(updatedReceiving.costPerPallet),
+        forkliftUsed: updatedReceiving.forkliftUsed,
+        forkliftName: updatedReceiving.forkliftName,
+        dockDoor: updatedReceiving.dockDoor,
+        notes: updatedReceiving.notes,
+      };
+
+      await recordCompletedRecordCorrection({
+        actor,
+        entity: {
+          organizationId: truckload.organizationId,
+          locationId: truckload.locationId,
+          entityType: "TRUCKLOAD",
+          entityId: truckload.id,
+          entityCode: truckload.code,
+        },
+        recordType: "TRUCK_RECEIVING",
+        reason,
+        before,
+        after,
+        metadata: {
+          receivingId: receiving.id,
+          truckloadStatus: truckload.status,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        action: "correct-completed",
+        status: truckload.status,
+        receiving: updatedReceiving,
+        audit: {
+          recorded: true,
+          reason,
         },
       });
     }
