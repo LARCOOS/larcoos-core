@@ -70,6 +70,10 @@ type ReceivingResponse = {
 
   receiving?: ReceivingRecord | null;
   workers?: Worker[];
+
+  permissions?: {
+    canEditCompletedRecords: boolean;
+  };
 };
 
 type Props = {
@@ -166,6 +170,13 @@ export default function ReceivingPanel({
   const [forkliftUsed, setForkliftUsed] = useState(false);
   const [forkliftName, setForkliftName] = useState("");
   const [dockDoor, setDockDoor] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const [canEditCompletedRecords, setCanEditCompletedRecords] =
+    useState(false);
+  const [editingCompletedRecord, setEditingCompletedRecord] =
+    useState(false);
+  const [correctionReason, setCorrectionReason] = useState("");
 
   const [workerDrafts, setWorkerDrafts] = useState<WorkerDraft[]>([
     {
@@ -211,6 +222,9 @@ export default function ReceivingPanel({
 
       setReceiving(record);
       setWorkers(data.workers ?? []);
+      setCanEditCompletedRecords(
+        Boolean(data.permissions?.canEditCompletedRecords)
+      );
 
       if (record) {
         setOriginName(record.originName ?? "");
@@ -240,6 +254,7 @@ export default function ReceivingPanel({
         setForkliftUsed(record.forkliftUsed);
         setForkliftName(record.forkliftName ?? "");
         setDockDoor(record.dockDoor ?? "");
+        setNotes(record.notes ?? "");
       }
     } catch (err) {
       setError(
@@ -307,6 +322,14 @@ export default function ReceivingPanel({
   const unloadingFinished = Boolean(
     receiving?.unloadingFinishedAt
   );
+
+  const completedRecord =
+    truckloadStatus === "Unloaded" && unloadingFinished;
+
+  const completedFieldsEditable =
+    completedRecord &&
+    canEditCompletedRecords &&
+    editingCompletedRecord;
 
   const palletsUnloaded = receiving?.palletsUnloaded ?? 0;
 
@@ -517,6 +540,102 @@ export default function ReceivingPanel({
     }
   }
 
+  function cancelCompletedCorrection() {
+    if (receiving) {
+      setOriginName(receiving.originName ?? "");
+      setOriginCity(receiving.originCity ?? "");
+      setOriginState(receiving.originState ?? "");
+      setOriginCountry(
+        receiving.originCountry ?? "United States"
+      );
+
+      setCarrierName(receiving.carrierName ?? "");
+      setDriverName(receiving.driverName ?? "");
+      setDriverPhone(receiving.driverPhone ?? "");
+
+      setTruckNumber(receiving.truckNumber ?? "");
+      setTrailerNumber(receiving.trailerNumber ?? "");
+
+      setDistanceMiles(
+        receiving.distanceMiles === null
+          ? ""
+          : String(receiving.distanceMiles)
+      );
+
+      setFreightCost(
+        receiving.freightCost === null
+          ? String(defaultFreight)
+          : String(receiving.freightCost)
+      );
+
+      setForkliftUsed(receiving.forkliftUsed);
+      setForkliftName(receiving.forkliftName ?? "");
+      setDockDoor(receiving.dockDoor ?? "");
+      setNotes(receiving.notes ?? "");
+    }
+
+    setCorrectionReason("");
+    setEditingCompletedRecord(false);
+    setError("");
+  }
+
+  async function saveCompletedCorrection() {
+    const reason = correctionReason.trim();
+
+    if (reason.length < 5) {
+      setError(
+        "Correction Reason is required and must contain at least 5 characters."
+      );
+      return;
+    }
+
+    try {
+      await postAction({
+        action: "correct-completed",
+        reason,
+
+        originName,
+        originCity,
+        originState,
+        originCountry,
+
+        carrierName,
+        driverName,
+        driverPhone,
+
+        truckNumber,
+        trailerNumber,
+
+        distanceMiles:
+          distanceMiles.trim() === ""
+            ? null
+            : Number(distanceMiles),
+
+        freightCost:
+          freightCost.trim() === ""
+            ? null
+            : Number(freightCost),
+
+        forkliftUsed,
+        forkliftName:
+          forkliftUsed && forkliftName.trim()
+            ? forkliftName.trim()
+            : null,
+
+        dockDoor: dockDoor.trim() || null,
+        notes: notes.trim() || null,
+      });
+
+      setEditingCompletedRecord(false);
+      setCorrectionReason("");
+      setMessage(
+        "Completed receiving record corrected. The change, reason, actor, before/after values and timestamp were preserved in the LARCOOS Audit Trail."
+      );
+    } catch {
+      // Error is already displayed by postAction.
+    }
+  }
+
   function addWorker() {
     setWorkerDrafts((current) => [
       ...current,
@@ -563,7 +682,14 @@ export default function ReceivingPanel({
   }
 
   return (
-    <section className="space-y-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
+    <section
+      className={[
+        "space-y-6 rounded-2xl border p-6",
+        completedRecord
+          ? "border-emerald-900 bg-emerald-950/10"
+          : "border-zinc-800 bg-zinc-950",
+      ].join(" ")}
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
@@ -581,14 +707,47 @@ export default function ReceivingPanel({
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3">
-          <p className="text-xs uppercase tracking-wide text-zinc-500">
-            Operational Status
-          </p>
+        <div className="flex flex-col items-stretch gap-3 sm:items-end">
+          <div
+            className={[
+              "rounded-xl border px-4 py-3",
+              completedRecord
+                ? "border-emerald-900 bg-emerald-950/30"
+                : "border-zinc-800 bg-zinc-900",
+            ].join(" ")}
+          >
+            <p className="text-xs uppercase tracking-wide text-zinc-500">
+              Operational Status
+            </p>
 
-          <p className="mt-1 font-semibold text-white">
-            {truckloadStatus || "Unknown"}
-          </p>
+            <p
+              className={[
+                "mt-1 font-semibold",
+                completedRecord
+                  ? "text-emerald-300"
+                  : "text-white",
+              ].join(" ")}
+            >
+              {truckloadStatus || "Unknown"}
+            </p>
+          </div>
+
+          {completedRecord &&
+            canEditCompletedRecords &&
+            !editingCompletedRecord && (
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setMessage("");
+                  setCorrectionReason("");
+                  setEditingCompletedRecord(true);
+                }}
+                className="rounded-xl border border-amber-700 bg-amber-950/20 px-4 py-3 text-sm font-semibold text-amber-300 hover:bg-amber-950/40"
+              >
+                EDIT COMPLETED RECORD
+              </button>
+            )}
         </div>
       </div>
 
@@ -601,6 +760,32 @@ export default function ReceivingPanel({
       {message && (
         <div className="rounded-xl border border-emerald-900 bg-emerald-950/30 p-4 text-sm text-emerald-300">
           {message}
+        </div>
+      )}
+
+      {completedRecord && !editingCompletedRecord && (
+        <div className="rounded-xl border border-emerald-900 bg-emerald-950/20 p-4">
+          <p className="text-sm font-semibold text-emerald-300">
+            COMPLETED RECORD — LOCKED
+          </p>
+          <p className="mt-1 text-xs text-emerald-200/60">
+            Receiving and unloading are complete. Operational history
+            remains locked. Authorized managers may create an audited
+            correction without reopening the truckload.
+          </p>
+        </div>
+      )}
+
+      {editingCompletedRecord && (
+        <div className="rounded-xl border border-amber-700 bg-amber-950/20 p-4">
+          <p className="text-sm font-semibold text-amber-300">
+            MANAGER CORRECTION MODE
+          </p>
+          <p className="mt-1 text-xs text-amber-200/60">
+            Administrative receiving fields are editable. Unloading
+            timestamps, pallet history and completed status remain
+            locked.
+          </p>
         </div>
       )}
 
@@ -645,7 +830,14 @@ export default function ReceivingPanel({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+      <div
+        className={[
+          "rounded-2xl border p-5",
+          completedRecord
+            ? "border-emerald-900 bg-emerald-950/10"
+            : "border-zinc-800 bg-zinc-900/40",
+        ].join(" ")}
+      >
         <div className="mb-5">
           <h3 className="text-lg font-semibold text-white">
             1. Truck Arrival
@@ -661,7 +853,7 @@ export default function ReceivingPanel({
             label="Origin / Facility"
             value={originName}
             onChange={setOriginName}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="Supplier warehouse"
           />
 
@@ -669,7 +861,7 @@ export default function ReceivingPanel({
             label="Origin City"
             value={originCity}
             onChange={setOriginCity}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="City"
           />
 
@@ -677,7 +869,7 @@ export default function ReceivingPanel({
             label="Origin State"
             value={originState}
             onChange={setOriginState}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="State"
           />
 
@@ -685,7 +877,7 @@ export default function ReceivingPanel({
             label="Origin Country"
             value={originCountry}
             onChange={setOriginCountry}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="United States"
           />
 
@@ -693,7 +885,7 @@ export default function ReceivingPanel({
             label="Carrier"
             value={carrierName}
             onChange={setCarrierName}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="Carrier name"
           />
 
@@ -701,7 +893,7 @@ export default function ReceivingPanel({
             label="Driver"
             value={driverName}
             onChange={setDriverName}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="Driver name"
           />
 
@@ -709,7 +901,7 @@ export default function ReceivingPanel({
             label="Driver Phone"
             value={driverPhone}
             onChange={setDriverPhone}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="Phone"
           />
 
@@ -717,7 +909,7 @@ export default function ReceivingPanel({
             label="Truck Number"
             value={truckNumber}
             onChange={setTruckNumber}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="Truck / tractor"
           />
 
@@ -725,7 +917,7 @@ export default function ReceivingPanel({
             label="Trailer Number"
             value={trailerNumber}
             onChange={setTrailerNumber}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             placeholder="Trailer"
           />
 
@@ -733,7 +925,7 @@ export default function ReceivingPanel({
             label="Distance Miles"
             value={distanceMiles}
             onChange={setDistanceMiles}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             type="number"
             placeholder="0"
           />
@@ -742,7 +934,7 @@ export default function ReceivingPanel({
             label="Freight Cost"
             value={freightCost}
             onChange={setFreightCost}
-            disabled={hasBeenReceived}
+            disabled={hasBeenReceived && !completedFieldsEditable}
             type="number"
             placeholder="0.00"
           />
@@ -797,7 +989,14 @@ export default function ReceivingPanel({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+      <div
+        className={[
+          "rounded-2xl border p-5",
+          completedRecord
+            ? "border-emerald-900 bg-emerald-950/10"
+            : "border-zinc-800 bg-zinc-900/40",
+        ].join(" ")}
+      >
         <div className="mb-5">
           <h3 className="text-lg font-semibold text-white">
             2. Unloading Setup
@@ -820,7 +1019,7 @@ export default function ReceivingPanel({
               disabled={
                 !hasBeenReceived ||
                 unloadingRunning ||
-                unloadingFinished
+                (unloadingFinished && !completedFieldsEditable)
               }
               className="h-4 w-4"
             />
@@ -838,7 +1037,7 @@ export default function ReceivingPanel({
               !hasBeenReceived ||
               !forkliftUsed ||
               unloadingRunning ||
-              unloadingFinished
+              (unloadingFinished && !completedFieldsEditable)
             }
             placeholder="Forklift ID / rental"
           />
@@ -850,11 +1049,77 @@ export default function ReceivingPanel({
             disabled={
               !hasBeenReceived ||
               unloadingRunning ||
-              unloadingFinished
+              (unloadingFinished && !completedFieldsEditable)
             }
             placeholder="Dock 1"
           />
         </div>
+
+        {(completedRecord || editingCompletedRecord) && (
+          <div className="mt-4">
+            <label className="space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Receiving Notes
+              </span>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                disabled={!completedFieldsEditable}
+                rows={4}
+                placeholder="Receiving notes"
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </label>
+          </div>
+        )}
+
+        {editingCompletedRecord && (
+          <div className="mt-6 space-y-4 rounded-2xl border border-amber-800 bg-amber-950/10 p-5">
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+                Correction Reason *
+              </span>
+              <textarea
+                value={correctionReason}
+                onChange={(event) =>
+                  setCorrectionReason(event.target.value)
+                }
+                rows={3}
+                placeholder="Explain why this completed record must be corrected."
+                className="w-full rounded-xl border border-amber-900 bg-zinc-950 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-amber-700"
+              />
+              <span className="block text-xs text-zinc-500">
+                Required. This reason becomes part of the permanent
+                Audit Trail.
+              </span>
+            </label>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={saveCompletedCorrection}
+                disabled={
+                  working ||
+                  correctionReason.trim().length < 5
+                }
+                className="rounded-xl bg-amber-300 px-5 py-3 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {working
+                  ? "SAVING CORRECTION..."
+                  : "SAVE AUDITED CORRECTION"}
+              </button>
+
+              <button
+                type="button"
+                onClick={cancelCompletedCorrection}
+                disabled={working}
+                className="rounded-xl border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        )}
 
         {!unloadingRunning &&
           !unloadingFinished &&
@@ -993,7 +1258,14 @@ export default function ReceivingPanel({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+      <div
+        className={[
+          "rounded-2xl border p-5",
+          completedRecord
+            ? "border-emerald-900 bg-emerald-950/10"
+            : "border-zinc-800 bg-zinc-900/40",
+        ].join(" ")}
+      >
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-white">
@@ -1096,7 +1368,14 @@ export default function ReceivingPanel({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+      <div
+        className={[
+          "rounded-2xl border p-5",
+          completedRecord
+            ? "border-emerald-900 bg-emerald-950/10"
+            : "border-zinc-800 bg-zinc-900/40",
+        ].join(" ")}
+      >
         <h3 className="text-lg font-semibold text-white">
           4. Finish Unloading
         </h3>
