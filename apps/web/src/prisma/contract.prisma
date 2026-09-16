@@ -1,10 +1,11 @@
 // use prisma-8
 
 // ============================================================
-// LARCOOS KERNEL v0.3
+// LARCOOS KERNEL v0.4
 //
 // Core:
 // Organizations
+// Organization Memberships
 // Locations
 // Actors
 // Roles / Permissions
@@ -12,12 +13,37 @@
 // Sessions
 // Kernel Events / Audit Trail
 //
+// Multi-organization principle:
+//
+// Actor = permanent person/system identity.
+//
+// OrganizationMembership = authorization of that Actor
+// inside one specific organization/workspace.
+//
+// One Actor may therefore belong to multiple organizations
+// with different roles and permissions.
+//
+// TRANSITIONAL COMPATIBILITY:
+//
+// Actor.organizationId remains temporarily as the Actor's
+// primary/legacy organization.
+//
+// Actor.systemRole and Actor permission flags also remain
+// temporarily so existing LARCOOS modules continue working
+// while authorization migrates to OrganizationMembership.
+//
+// New organization-aware authorization should prefer:
+//
+// Actor
+//   -> OrganizationMembership
+//   -> Organization
+//
 // Security principle:
 // Operational role != system authorization.
 //
 // Example:
 // A person may work as "Forklift Operator" during unloading
-// while their system role is EMPLOYEE.
+// while their organization membership role is EMPLOYEE.
 //
 // Completed records are immutable for normal employees.
 // Authorized managers/admins may correct completed records,
@@ -28,6 +54,11 @@
 // Actor = permanent LARCOOS identity.
 // AuthAccount = login credentials.
 // AuthSession = authenticated revocable session.
+//
+// Authentication identifies WHO the person is.
+//
+// OrganizationMembership determines WHAT that authenticated
+// Actor may do inside a specific organization.
 //
 // Passwords are NEVER stored directly.
 // AuthAccount.passwordHash stores only a secure password hash.
@@ -48,13 +79,73 @@ model Organization {
 
   isActive Boolean @default(true)
 
-  locations  Location[]
-  actors     Actor[]
-  events     KernelEvent[]
-  truckloads Truckload[]
+  locations   Location[]
+  actors      Actor[]
+  memberships OrganizationMembership[]
+  events      KernelEvent[]
+  truckloads  Truckload[]
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
+}
+
+// ============================================================
+// ORGANIZATION MEMBERSHIP
+//
+// Connects one permanent Actor identity to one Organization.
+//
+// Authorization belongs here because the same Actor may have
+// different authority in different organizations.
+//
+// Example:
+//
+// Victor
+//   -> LDC LLC      -> OWNER_ADMIN
+//   -> ViDaMar      -> MANAGER
+//   -> Future Co.   -> VIEWER
+//
+// Authentication remains attached to Actor/AuthAccount.
+// Membership does NOT create another login.
+//
+// Exactly one membership per Actor + Organization.
+//
+// During Kernel v0.4 migration, Actor.organizationId and the
+// authorization fields on Actor remain for compatibility.
+// They will not be removed until existing operational APIs
+// have migrated to organization-aware authorization.
+// ============================================================
+
+model OrganizationMembership {
+  id             Int @id @default(autoincrement())
+  organizationId Int
+  actorId        Int
+
+  systemRole String @default("EMPLOYEE")
+
+  canEditCompletedRecords Boolean @default(false)
+  canManageUsers          Boolean @default(false)
+  canApproveFinancials    Boolean @default(false)
+  canManageKernel         Boolean @default(false)
+
+  isActive Boolean @default(true)
+
+  organization Organization @relation(
+    fields: [organizationId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  actor Actor @relation(
+    fields: [actorId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@unique([organizationId, actorId])
+  @@index([actorId])
 }
 
 // ============================================================
@@ -97,18 +188,29 @@ model Location {
 // ============================================================
 // ACTOR
 //
-// Actor represents a person/system identity.
+// Actor represents a permanent person/system identity.
 //
 // IMPORTANT:
-// systemRole controls authorization inside LARCOOS.
-// It is different from operational roles such as:
+//
+// Authentication belongs to Actor through AuthAccount.
+//
+// Organization-specific authorization belongs to
+// OrganizationMembership.
+//
+// TRANSITIONAL:
+//
+// organizationId remains the primary/legacy organization.
+//
+// systemRole and permission flags remain temporarily for
+// compatibility with existing authorization code.
+//
+// Operational roles such as:
 // Receiver
 // Forklift Operator
 // Warehouse Unloader
 // Supervisor
 //
-// Authentication credentials are NOT stored on Actor.
-// They are stored separately in AuthAccount.
+// remain separate from system authorization.
 // ============================================================
 
 model Actor {
@@ -123,7 +225,7 @@ model Actor {
   phone String?
 
   // -----------------------------------------
-  // SYSTEM AUTHORIZATION
+  // LEGACY / TRANSITIONAL AUTHORIZATION
   // -----------------------------------------
 
   systemRole String @default("EMPLOYEE")
@@ -135,14 +237,17 @@ model Actor {
 
   isActive Boolean @default(true)
 
+  // Primary/legacy organization.
+  // OrganizationMembership is the new multi-org authority.
   organization Organization? @relation(
     fields: [organizationId],
     references: [id],
     onDelete: SetNull
   )
 
-  authAccount     AuthAccount?
-  events          KernelEvent[]
+  memberships      OrganizationMembership[]
+  authAccount      AuthAccount?
+  events           KernelEvent[]
   unloadingWorkers UnloadingWorker[]
 
   createdAt TimestamptzString @default(now())
@@ -221,9 +326,9 @@ model AuthSession {
 
   tokenHash String @unique
 
-  expiresAt TimestamptzString
+  expiresAt  TimestamptzString
   lastSeenAt TimestamptzString?
-  revokedAt TimestamptzString?
+  revokedAt  TimestamptzString?
 
   account AuthAccount @relation(
     fields: [accountId],
@@ -263,6 +368,13 @@ model AuthSession {
 // AUTH_LOGIN_FAILED
 // AUTH_LOGOUT
 // AUTH_SESSION_REVOKED
+//
+// Organization membership:
+//
+// ORGANIZATION_MEMBERSHIP_CREATED
+// ORGANIZATION_MEMBERSHIP_UPDATED
+// ORGANIZATION_MEMBERSHIP_DEACTIVATED
+// KERNEL_ORGANIZATION_MEMBERSHIP_INITIALIZED
 //
 // Administrative corrections:
 //
@@ -441,11 +553,12 @@ model Pallet {
 //
 // A Manager/Admin correction must:
 //
-// 1. Verify authorization.
-// 2. Require a reason.
-// 3. Preserve old values.
-// 4. Apply corrected values.
-// 5. Create COMPLETED_RECORD_CORRECTED KernelEvent.
+// 1. Verify authenticated Actor.
+// 2. Resolve authorization inside the Organization.
+// 3. Require a reason.
+// 4. Preserve old values.
+// 5. Apply corrected values.
+// 6. Create COMPLETED_RECORD_CORRECTED KernelEvent.
 // ============================================================
 
 model TruckReceiving {
@@ -531,8 +644,13 @@ model TruckReceiving {
 // Supervisor
 //
 // This role DOES NOT grant system permissions.
-// System authorization comes from Actor.systemRole and
-// Actor permission flags.
+//
+// Current transitional authorization may still use Actor
+// permissions.
+//
+// Organization-aware authorization will use:
+//
+// Actor -> OrganizationMembership -> Organization
 // ============================================================
 
 model UnloadingWorker {
