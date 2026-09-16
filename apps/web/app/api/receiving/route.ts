@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/src/prisma/db";
 import { randomUUID } from "crypto";
+import { getAuthenticatedActor } from "@/src/kernel/session";
+import { authorizeOrganizationAccess } from "@/src/kernel/authorization";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,6 +86,23 @@ export async function GET(request: Request) {
         { status: 404 }
       );
     }
+
+    if (!truckload.organizationId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Truckload has no organization",
+        },
+        { status: 409 }
+      );
+    }
+
+    const actor = await getAuthenticatedActor();
+
+    await authorizeOrganizationAccess({
+      actorId: actor.id,
+      organizationId: truckload.organizationId,
+    });
 
     const receiving =
       await db.orm.public.TruckReceiving
@@ -174,12 +193,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const actorId =
-      body.actorId === null ||
-      body.actorId === undefined ||
-      body.actorId === ""
-        ? null
-        : Number(body.actorId);
+    if (!truckload.organizationId) {
+      return NextResponse.json({ success: false, error: "Truckload has no organization" }, { status: 409 });
+    }
+
+    const actor = await getAuthenticatedActor();
+
+    await authorizeOrganizationAccess({
+      actorId: actor.id,
+      organizationId: truckload.organizationId,
+    });
+
+    const actorId = actor.id;
 
     // =========================================================
     // RECEIVE TRUCK
