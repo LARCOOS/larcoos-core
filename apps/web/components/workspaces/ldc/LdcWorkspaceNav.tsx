@@ -68,9 +68,7 @@ export default function LdcWorkspaceNav() {
           {modules.map((module) => {
             const active =
               pathname === module.href ||
-              pathname.startsWith(
-                `${module.href}/`
-              );
+              pathname.startsWith(`${module.href}/`);
 
             return (
               <Link
