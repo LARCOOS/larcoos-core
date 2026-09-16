@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import SignOutButton from "@/components/auth/SignOutButton";
 import { db } from "@/src/prisma/db";
 import { getAuthenticatedSession } from "@/src/kernel/session";
 
@@ -34,9 +35,10 @@ export default async function Home() {
 
   const workspaces = memberships
     .map((membership) => {
-      const organization = organizationById.get(
-        membership.organizationId
-      );
+      const organization =
+        organizationById.get(
+          membership.organizationId
+        );
 
       if (!organization) {
         return null;
@@ -82,7 +84,7 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900 px-5 py-4">
+          <div className="min-w-72 rounded-2xl border border-neutral-800 bg-neutral-900 px-5 py-4">
             <div className="text-xs uppercase tracking-wider text-neutral-500">
               Authenticated Actor
             </div>
@@ -94,6 +96,8 @@ export default async function Home() {
             <div className="mt-1 text-sm text-neutral-400">
               {session.actor.code}
             </div>
+
+            <SignOutButton />
           </div>
         </header>
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import SignOutButton from "@/components/auth/SignOutButton";
 
 type ApiTruckload = {
   id: number;
@@ -28,7 +29,10 @@ type Truckload = {
   destination: string;
   status: string;
 };
-function normalizeTruckload(load: ApiTruckload): Truckload {
+
+function normalizeTruckload(
+  load: ApiTruckload
+): Truckload {
   return {
     id: load.id,
     code: load.code,
@@ -41,24 +45,43 @@ function normalizeTruckload(load: ApiTruckload): Truckload {
     status: load.status,
   };
 }
-   
 
 export default function TruckloadsPage() {
-  const [truckloads, setTruckloads] = useState<Truckload[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [truckloads, setTruckloads] =
+    useState<Truckload[]>([]);
 
-  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [supplier, setSupplier] = useState("");
-  const [retailer, setRetailer] = useState("");
-  const [pallets, setPallets] = useState("24");
-  const [purchase, setPurchase] = useState("");
-  const [freight, setFreight] = useState("");
+  const [saving, setSaving] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [showForm, setShowForm] =
+    useState(false);
+
+  const [supplier, setSupplier] =
+    useState("");
+
+  const [retailer, setRetailer] =
+    useState("");
+
+  const [pallets, setPallets] =
+    useState("24");
+
+  const [purchase, setPurchase] =
+    useState("");
+
+  const [freight, setFreight] =
+    useState("");
+
   const [destination, setDestination] =
     useState("ViDaMar - Puruandiro");
-  const [status, setStatus] = useState("Planned");
+
+  const [status, setStatus] =
+    useState("Planned");
 
   useEffect(() => {
     async function loadTruckloads() {
@@ -66,20 +89,31 @@ export default function TruckloadsPage() {
         setLoading(true);
         setError("");
 
-        const response = await fetch("/api/truckloads", {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          "/api/truckloads",
+          {
+            cache: "no-store",
+          }
+        );
 
         if (!response.ok) {
-          throw new Error("Failed to load truckloads");
+          throw new Error(
+            "Failed to load truckloads"
+          );
         }
 
-        const data: ApiTruckload[] = await response.json();
+        const data: ApiTruckload[] =
+          await response.json();
 
-        setTruckloads(data.map(normalizeTruckload));
+        setTruckloads(
+          data.map(normalizeTruckload)
+        );
       } catch (err) {
         console.error(err);
-        setError("Could not load truckloads from the database.");
+
+        setError(
+          "Could not load truckloads from the database."
+        );
       } finally {
         setLoading(false);
       }
@@ -88,32 +122,46 @@ export default function TruckloadsPage() {
     void loadTruckloads();
   }, []);
 
-  const money = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
+  const money =
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    });
 
-  const totalCost = truckloads.reduce(
-    (total, load) => total + load.purchase + load.freight,
-    0
-  );
+  const totalCost =
+    truckloads.reduce(
+      (total, load) =>
+        total +
+        load.purchase +
+        load.freight,
+      0
+    );
 
-  const totalPallets = truckloads.reduce(
-    (total, load) => total + load.pallets,
-    0
-  );
+  const totalPallets =
+    truckloads.reduce(
+      (total, load) =>
+        total + load.pallets,
+      0
+    );
 
   const costPerPallet =
-    totalPallets > 0 ? totalCost / totalPallets : 0;
+    totalPallets > 0
+      ? totalCost / totalPallets
+      : 0;
 
   async function createTruckload(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    const purchaseNumber = Number(purchase);
-    const freightNumber = Number(freight);
-    const palletNumber = Number(pallets);
+    const purchaseNumber =
+      Number(purchase);
+
+    const freightNumber =
+      Number(freight);
+
+    const palletNumber =
+      Number(pallets);
 
     if (
       !supplier.trim() ||
@@ -121,12 +169,19 @@ export default function TruckloadsPage() {
       !destination.trim() ||
       !Number.isInteger(palletNumber) ||
       palletNumber <= 0 ||
-      !Number.isFinite(purchaseNumber) ||
+      !Number.isFinite(
+        purchaseNumber
+      ) ||
       purchaseNumber < 0 ||
-      !Number.isFinite(freightNumber) ||
+      !Number.isFinite(
+        freightNumber
+      ) ||
       freightNumber < 0
     ) {
-      setError("Please enter valid truckload information.");
+      setError(
+        "Please enter valid truckload information."
+      );
+
       return;
     }
 
@@ -134,46 +189,75 @@ export default function TruckloadsPage() {
       setSaving(true);
       setError("");
 
-      const response = await fetch("/api/truckloads", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          supplier: supplier.trim(),
-          retailer: retailer.trim(),
-          pallets: palletNumber,
-          purchase: purchaseNumber,
-          freight: freightNumber,
-          destination: destination.trim(),
-          status,
-        }),
-      });
+      const response = await fetch(
+        "/api/truckloads",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            supplier:
+              supplier.trim(),
+            retailer:
+              retailer.trim(),
+            pallets:
+              palletNumber,
+            purchase:
+              purchaseNumber,
+            freight:
+              freightNumber,
+            destination:
+              destination.trim(),
+            status,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        const result = await response.json().catch(() => null);
+        const result =
+          await response
+            .json()
+            .catch(() => null);
 
         throw new Error(
-          result?.error ?? "Failed to create truckload"
+          result?.error ??
+            "Failed to create truckload"
         );
       }
 
-      const created: ApiTruckload = await response.json();
-      const normalized = normalizeTruckload(created);
+      const created: ApiTruckload =
+        await response.json();
 
-      setTruckloads((current) => [normalized, ...current]);
+      const normalized =
+        normalizeTruckload(
+          created
+        );
+
+      setTruckloads(
+        (current) => [
+          normalized,
+          ...current,
+        ]
+      );
 
       setSupplier("");
       setRetailer("");
       setPallets("24");
       setPurchase("");
       setFreight("");
-      setDestination("ViDaMar - Puruandiro");
+      setDestination(
+        "ViDaMar - Puruandiro"
+      );
       setStatus("Planned");
       setShowForm(false);
     } catch (err) {
       console.error(err);
-      setError("Could not save the truckload to the database.");
+
+      setError(
+        "Could not save the truckload to the database."
+      );
     } finally {
       setSaving(false);
     }
@@ -182,32 +266,56 @@ export default function TruckloadsPage() {
   return (
     <main className="min-h-screen bg-neutral-950 p-8 text-white">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-neutral-500">
-              LDC LLC / OPERATIONS
-            </p>
 
-            <h1 className="mt-2 text-4xl font-bold">
-              Truckloads
-            </h1>
+        <div className="mb-8">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/"
+                className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-neutral-300 transition hover:border-neutral-500 hover:bg-neutral-800 hover:text-white"
+              >
+                ← My Panel
+              </Link>
 
-            <p className="mt-2 text-neutral-400">
-              Control de compras, costos, pallets y movimientos
-              Alice → Puruándiro.
-            </p>
+              <span className="rounded-lg border border-emerald-900 bg-emerald-950/30 px-4 py-2 text-sm font-semibold text-emerald-300">
+                LDC Workspace
+              </span>
+            </div>
+
+            <div className="min-w-32">
+              <SignOutButton />
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setError("");
-              setShowForm(true);
-            }}
-            className="rounded-lg bg-white px-5 py-3 font-semibold text-black hover:bg-neutral-200"
-          >
-            + New Truckload
-          </button>
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-medium text-neutral-500">
+                LDC LLC / OPERATIONS
+              </p>
+
+              <h1 className="mt-2 text-4xl font-bold">
+                Truckloads
+              </h1>
+
+              <p className="mt-2 text-neutral-400">
+                Control de compras,
+                costos, pallets y
+                movimientos Alice →
+                Puruándiro.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setError("");
+                setShowForm(true);
+              }}
+              className="rounded-lg bg-white px-5 py-3 font-semibold text-black hover:bg-neutral-200"
+            >
+              + New Truckload
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -219,22 +327,30 @@ export default function TruckloadsPage() {
         <section className="mb-8 grid gap-4 md:grid-cols-4">
           <Metric
             title="Truckloads"
-            value={String(truckloads.length)}
+            value={String(
+              truckloads.length
+            )}
           />
 
           <Metric
             title="Total Pallets"
-            value={String(totalPallets)}
+            value={String(
+              totalPallets
+            )}
           />
 
           <Metric
             title="Landed Cost"
-            value={money.format(totalCost)}
+            value={money.format(
+              totalCost
+            )}
           />
 
           <Metric
             title="Cost / Pallet"
-            value={money.format(costPerPallet)}
+            value={money.format(
+              costPerPallet
+            )}
           />
         </section>
 
@@ -249,15 +365,41 @@ export default function TruckloadsPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-neutral-950 text-neutral-500">
                 <tr>
-                  <th className="px-6 py-4">ID</th>
-                  <th className="px-6 py-4">Supplier</th>
-                  <th className="px-6 py-4">Retailer</th>
-                  <th className="px-6 py-4">Pallets</th>
-                  <th className="px-6 py-4">Purchase</th>
-                  <th className="px-6 py-4">Freight</th>
-                  <th className="px-6 py-4">Landed Cost</th>
-                  <th className="px-6 py-4">Destination</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">
+                    ID
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Supplier
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Retailer
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Pallets
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Purchase
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Freight
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Landed Cost
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Destination
+                  </th>
+
+                  <th className="px-6 py-4">
+                    Status
+                  </th>
                 </tr>
               </thead>
 
@@ -271,70 +413,87 @@ export default function TruckloadsPage() {
                       Loading truckloads...
                     </td>
                   </tr>
-                ) : truckloads.length === 0 ? (
+                ) : truckloads.length ===
+                  0 ? (
                   <tr>
                     <td
                       colSpan={9}
                       className="px-6 py-10 text-center text-neutral-500"
                     >
-                      No truckloads registered.
+                      No truckloads
+                      registered.
                     </td>
                   </tr>
                 ) : (
-                  truckloads.map((load) => {
-                    const landed =
-                      load.purchase + load.freight;
+                  truckloads.map(
+                    (load) => {
+                      const landed =
+                        load.purchase +
+                        load.freight;
 
-                    return (
-                      <tr
-                        key={load.id}
-                        className="border-t border-neutral-800"
-                      >
-                      <td className="px-6 py-5 font-semibold">
-  <Link
-    href={`/ldc/truckloads/${encodeURIComponent(load.code)}`}
-    className="transition hover:underline"
-  >
-    {load.code}
-  </Link>
-</td>
+                      return (
+                        <tr
+                          key={load.id}
+                          className="border-t border-neutral-800"
+                        >
+                          <td className="px-6 py-5 font-semibold">
+                            <Link
+                              href={`/ldc/truckloads/${encodeURIComponent(
+                                load.code
+                              )}`}
+                              className="transition hover:underline"
+                            >
+                              {load.code}
+                            </Link>
+                          </td>
 
-                        <td className="px-6 py-5">
-                          {load.supplier}
-                        </td>
+                          <td className="px-6 py-5">
+                            {load.supplier}
+                          </td>
 
-                        <td className="px-6 py-5">
-                          {load.retailer}
-                        </td>
+                          <td className="px-6 py-5">
+                            {load.retailer}
+                          </td>
 
-                        <td className="px-6 py-5">
-                          {load.pallets}
-                        </td>
+                          <td className="px-6 py-5">
+                            {load.pallets}
+                          </td>
 
-                        <td className="px-6 py-5">
-                          {money.format(load.purchase)}
-                        </td>
+                          <td className="px-6 py-5">
+                            {money.format(
+                              load.purchase
+                            )}
+                          </td>
 
-                        <td className="px-6 py-5">
-                          {money.format(load.freight)}
-                        </td>
+                          <td className="px-6 py-5">
+                            {money.format(
+                              load.freight
+                            )}
+                          </td>
 
-                        <td className="px-6 py-5 font-semibold">
-                          {money.format(landed)}
-                        </td>
+                          <td className="px-6 py-5 font-semibold">
+                            {money.format(
+                              landed
+                            )}
+                          </td>
 
-                        <td className="px-6 py-5">
-                          {load.destination}
-                        </td>
+                          <td className="px-6 py-5">
+                            {
+                              load.destination
+                            }
+                          </td>
 
-                        <td className="px-6 py-5">
-                          <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs">
-                            {load.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
+                          <td className="px-6 py-5">
+                            <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs">
+                              {
+                                load.status
+                              }
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }
+                  )
                 )}
               </tbody>
             </table>
@@ -355,14 +514,17 @@ export default function TruckloadsPage() {
                   </h2>
 
                   <p className="mt-1 text-sm text-neutral-400">
-                    Register a new liquidation load.
+                    Register a new
+                    liquidation load.
                   </p>
                 </div>
 
                 <button
                   type="button"
                   disabled={saving}
-                  onClick={() => setShowForm(false)}
+                  onClick={() =>
+                    setShowForm(false)
+                  }
                   className="rounded-lg px-3 py-2 text-neutral-400 hover:bg-neutral-800 hover:text-white disabled:opacity-50"
                 >
                   ✕
@@ -370,18 +532,27 @@ export default function TruckloadsPage() {
               </div>
 
               <form
-                onSubmit={createTruckload}
+                onSubmit={
+                  createTruckload
+                }
                 className="grid gap-5 md:grid-cols-2"
               >
                 <Field label="Supplier">
                   <input
                     required
                     value={supplier}
-                    onChange={(event) =>
-                      setSupplier(event.target.value)
+                    onChange={(
+                      event
+                    ) =>
+                      setSupplier(
+                        event.target
+                          .value
+                      )
                     }
                     placeholder="The Liquidation Group"
-                    className={inputStyle}
+                    className={
+                      inputStyle
+                    }
                   />
                 </Field>
 
@@ -389,11 +560,18 @@ export default function TruckloadsPage() {
                   <input
                     required
                     value={retailer}
-                    onChange={(event) =>
-                      setRetailer(event.target.value)
+                    onChange={(
+                      event
+                    ) =>
+                      setRetailer(
+                        event.target
+                          .value
+                      )
                     }
                     placeholder="Lowe's"
-                    className={inputStyle}
+                    className={
+                      inputStyle
+                    }
                   />
                 </Field>
 
@@ -404,10 +582,17 @@ export default function TruckloadsPage() {
                     min="1"
                     step="1"
                     value={pallets}
-                    onChange={(event) =>
-                      setPallets(event.target.value)
+                    onChange={(
+                      event
+                    ) =>
+                      setPallets(
+                        event.target
+                          .value
+                      )
                     }
-                    className={inputStyle}
+                    className={
+                      inputStyle
+                    }
                   />
                 </Field>
 
@@ -418,11 +603,18 @@ export default function TruckloadsPage() {
                     min="0"
                     step="0.01"
                     value={purchase}
-                    onChange={(event) =>
-                      setPurchase(event.target.value)
+                    onChange={(
+                      event
+                    ) =>
+                      setPurchase(
+                        event.target
+                          .value
+                      )
                     }
                     placeholder="4700"
-                    className={inputStyle}
+                    className={
+                      inputStyle
+                    }
                   />
                 </Field>
 
@@ -433,29 +625,63 @@ export default function TruckloadsPage() {
                     min="0"
                     step="0.01"
                     value={freight}
-                    onChange={(event) =>
-                      setFreight(event.target.value)
+                    onChange={(
+                      event
+                    ) =>
+                      setFreight(
+                        event.target
+                          .value
+                      )
                     }
                     placeholder="900"
-                    className={inputStyle}
+                    className={
+                      inputStyle
+                    }
                   />
                 </Field>
 
                 <Field label="Status">
                   <select
                     value={status}
-                    onChange={(event) =>
-                      setStatus(event.target.value)
+                    onChange={(
+                      event
+                    ) =>
+                      setStatus(
+                        event.target
+                          .value
+                      )
                     }
-                    className={inputStyle}
+                    className={
+                      inputStyle
+                    }
                   >
-                    <option>Planned</option>
-                    <option>Purchased</option>
-                    <option>In Transit</option>
-                    <option>Received</option>
-                    <option>Processing</option>
-                    <option>Ready for Export</option>
-                    <option>Delivered</option>
+                    <option>
+                      Planned
+                    </option>
+
+                    <option>
+                      Purchased
+                    </option>
+
+                    <option>
+                      In Transit
+                    </option>
+
+                    <option>
+                      Received
+                    </option>
+
+                    <option>
+                      Processing
+                    </option>
+
+                    <option>
+                      Ready for Export
+                    </option>
+
+                    <option>
+                      Delivered
+                    </option>
                   </select>
                 </Field>
 
@@ -463,11 +689,20 @@ export default function TruckloadsPage() {
                   <Field label="Destination">
                     <input
                       required
-                      value={destination}
-                      onChange={(event) =>
-                        setDestination(event.target.value)
+                      value={
+                        destination
                       }
-                      className={inputStyle}
+                      onChange={(
+                        event
+                      ) =>
+                        setDestination(
+                          event.target
+                            .value
+                        )
+                      }
+                      className={
+                        inputStyle
+                      }
                     />
                   </Field>
                 </div>
@@ -476,7 +711,11 @@ export default function TruckloadsPage() {
                   <button
                     type="button"
                     disabled={saving}
-                    onClick={() => setShowForm(false)}
+                    onClick={() =>
+                      setShowForm(
+                        false
+                      )
+                    }
                     className="rounded-lg border border-neutral-700 px-5 py-3 font-medium hover:bg-neutral-800 disabled:opacity-50"
                   >
                     Cancel
