@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import SignOutButton from "@/components/auth/SignOutButton";
+import LdcWorkspaceNav from "@/components/workspaces/ldc/LdcWorkspaceNav";
 
 type ApiTruckload = {
   id: number;
@@ -266,56 +266,35 @@ export default function TruckloadsPage() {
   return (
     <main className="min-h-screen bg-neutral-950 p-8 text-white">
       <div className="mx-auto max-w-7xl">
+        <LdcWorkspaceNav />
 
-        <div className="mb-8">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/"
-                className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-neutral-300 transition hover:border-neutral-500 hover:bg-neutral-800 hover:text-white"
-              >
-                ← My Panel
-              </Link>
+        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-medium text-neutral-500">
+              LDC LLC / OPERATIONS
+            </p>
 
-              <span className="rounded-lg border border-emerald-900 bg-emerald-950/30 px-4 py-2 text-sm font-semibold text-emerald-300">
-                LDC Workspace
-              </span>
-            </div>
+            <h1 className="mt-2 text-4xl font-bold">
+              Truckloads
+            </h1>
 
-            <div className="min-w-32">
-              <SignOutButton />
-            </div>
+            <p className="mt-2 text-neutral-400">
+              Control de compras, costos,
+              pallets y movimientos Alice →
+              Puruándiro.
+            </p>
           </div>
 
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-medium text-neutral-500">
-                LDC LLC / OPERATIONS
-              </p>
-
-              <h1 className="mt-2 text-4xl font-bold">
-                Truckloads
-              </h1>
-
-              <p className="mt-2 text-neutral-400">
-                Control de compras,
-                costos, pallets y
-                movimientos Alice →
-                Puruándiro.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setError("");
-                setShowForm(true);
-              }}
-              className="rounded-lg bg-white px-5 py-3 font-semibold text-black hover:bg-neutral-200"
-            >
-              + New Truckload
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              setShowForm(true);
+            }}
+            className="rounded-lg bg-white px-5 py-3 font-semibold text-black hover:bg-neutral-200"
+          >
+            + New Truckload
+          </button>
         </div>
 
         {error && (
@@ -368,35 +347,27 @@ export default function TruckloadsPage() {
                   <th className="px-6 py-4">
                     ID
                   </th>
-
                   <th className="px-6 py-4">
                     Supplier
                   </th>
-
                   <th className="px-6 py-4">
                     Retailer
                   </th>
-
                   <th className="px-6 py-4">
                     Pallets
                   </th>
-
                   <th className="px-6 py-4">
                     Purchase
                   </th>
-
                   <th className="px-6 py-4">
                     Freight
                   </th>
-
                   <th className="px-6 py-4">
                     Landed Cost
                   </th>
-
                   <th className="px-6 py-4">
                     Destination
                   </th>
-
                   <th className="px-6 py-4">
                     Status
                   </th>
@@ -658,27 +629,21 @@ export default function TruckloadsPage() {
                     <option>
                       Planned
                     </option>
-
                     <option>
                       Purchased
                     </option>
-
                     <option>
                       In Transit
                     </option>
-
                     <option>
                       Received
                     </option>
-
                     <option>
                       Processing
                     </option>
-
                     <option>
                       Ready for Export
                     </option>
-
                     <option>
                       Delivered
                     </option>
