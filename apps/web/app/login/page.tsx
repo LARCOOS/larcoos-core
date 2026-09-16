@@ -37,6 +37,31 @@ export default function LoginPage() {
       return;
     }
 
+    const formData = new FormData(
+      event.currentTarget
+    );
+
+    const submittedLoginIdentifier =
+      String(
+        formData.get("loginIdentifier") ?? ""
+      ).trim();
+
+    const submittedPassword =
+      String(
+        formData.get("password") ?? ""
+      );
+
+    if (
+      !submittedLoginIdentifier ||
+      !submittedPassword
+    ) {
+      setError(
+        "Enter your login and password"
+      );
+
+      return;
+    }
+
     setError(null);
     setIsSubmitting(true);
 
@@ -51,8 +76,9 @@ export default function LoginPage() {
           },
           credentials: "same-origin",
           body: JSON.stringify({
-            loginIdentifier,
-            password,
+            loginIdentifier:
+              submittedLoginIdentifier,
+            password: submittedPassword,
           }),
         }
       );
@@ -70,13 +96,18 @@ export default function LoginPage() {
       }
 
       /*
-       * The raw authentication token is never stored
-       * in browser JavaScript. /api/auth/login sets the
-       * secure HttpOnly LARCOOS session cookie.
+       * The authentication token is never exposed
+       * to browser JavaScript.
+       *
+       * /api/auth/login creates the secure HttpOnly
+       * LARCOOS session cookie.
+       *
+       * The root dashboard resolves the authenticated
+       * Actor and authorized OrganizationMemberships.
        */
       setPassword("");
 
-      router.push("/api/auth/me");
+      router.replace("/");
       router.refresh();
     } catch {
       setError(
@@ -171,11 +202,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={
-                isSubmitting ||
-                !loginIdentifier.trim() ||
-                password.length === 0
-              }
+              disabled={isSubmitting}
               className="w-full rounded-xl bg-white px-4 py-3 font-semibold text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting
