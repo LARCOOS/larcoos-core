@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import LdcWorkspaceNav from "@/components/workspaces/ldc/LdcWorkspaceNav";
 
 type ApiTruckload = {
@@ -30,6 +30,27 @@ type Truckload = {
   status: string;
 };
 
+type Sale = {
+  id: number;
+  code: string;
+  truckloadId: number | null;
+  customerName: string | null;
+  paymentStatus: string;
+  currency: string;
+  grossAmount: number;
+  amountReceived: number;
+  balance: number;
+};
+
+type TruckloadSalesSummary = {
+  saleCount: number;
+  grossAmount: number;
+  amountReceived: number;
+  balance: number;
+  paymentStatus: string;
+  currency: string;
+};
+
 function normalizeTruckload(
   load: ApiTruckload
 ): Truckload {
@@ -46,9 +67,63 @@ function normalizeTruckload(
   };
 }
 
+function formatMoney(
+  value: number,
+  currency = "USD"
+) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(value);
+  } catch {
+    return `$${value.toFixed(2)}`;
+  }
+}
+
+function operationalStatusClass(status: string) {
+  if (
+    status === "Delivered" ||
+    status === "Ready for Export"
+  ) {
+    return "border-emerald-800 bg-emerald-950/40 text-emerald-300";
+  }
+
+  if (
+    status === "Received" ||
+    status === "Processing" ||
+    status === "Unloading" ||
+    status === "Unloaded" ||
+    status === "In Transit"
+  ) {
+    return "border-amber-800 bg-amber-950/40 text-amber-300";
+  }
+
+  return "border-neutral-700 bg-neutral-800 text-neutral-300";
+}
+
+function paymentStatusClass(status: string) {
+  if (status === "Paid in Full") {
+    return "border-emerald-800 bg-emerald-950/50 text-emerald-300";
+  }
+
+  if (status === "Partial") {
+    return "border-amber-800 bg-amber-950/50 text-amber-300";
+  }
+
+  if (status === "Unpaid") {
+    return "border-red-900 bg-red-950/30 text-red-300";
+  }
+
+  return "border-neutral-700 bg-neutral-950 text-neutral-500";
+}
+
 export default function TruckloadsPage() {
   const [truckloads, setTruckloads] =
     useState<Truckload[]>([]);
+
+  const [sales, setSales] =
+    useState<Sale[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -83,50 +158,130 @@ export default function TruckloadsPage() {
   const [status, setStatus] =
     useState("Planned");
 
-  useEffect(() => {
-    async function loadTruckloads() {
-      try {
-        setLoading(true);
-        setError("");
+  async function loadData() {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await fetch(
-          "/api/truckloads",
-          {
+      const [truckloadsResponse, salesResponse] =
+        await Promise.all([
+          fetch("/api/truckloads", {
             cache: "no-store",
+          }),
+          fetch("/api/sales", {
+            cache: "no-store",
+          }),
+        ]);
+
+      if (!truckloadsResponse.ok) {
+        throw new Error(
+          "Failed to load truckloads"
+        );
+      }
+
+      if (!salesResponse.ok) {
+        const result = await salesResponse
+          .json()
+          .catch(() => null);
+
+        throw new Error(
+          result?.error ??
+            "Failed to load sales"
+        );
+      }
+
+      const truckloadsData: ApiTruckload[] =
+        await truckloadsResponse.json();
+
+      const salesData: Sale[] =
+        await salesResponse.json();
+
+      setTruckloads(
+        truckloadsData.map(normalizeTruckload)
+      );
+
+      setSales(salesData);
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not load LDC truckload data."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadData();
+  }, []);
+
+  const salesByTruckload = useMemo(() => {
+    const summaries =
+      new Map<number, TruckloadSalesSummary>();
+
+    for (const sale of sales) {
+      if (sale.truckloadId === null) {
+        continue;
+      }
+
+      const existing =
+        summaries.get(sale.truckloadId);
+
+      const grossAmount =
+        Number(sale.grossAmount);
+
+      const amountReceived =
+        Number(sale.amountReceived);
+
+      const balance =
+        Number(sale.balance);
+
+      if (!existing) {
+        summaries.set(
+          sale.truckloadId,
+          {
+            saleCount: 1,
+            grossAmount,
+            amountReceived,
+            balance,
+            paymentStatus:
+              balance <= 0
+                ? "Paid in Full"
+                : amountReceived > 0
+                  ? "Partial"
+                  : "Unpaid",
+            currency: sale.currency,
           }
         );
 
-        if (!response.ok) {
-          throw new Error(
-            "Failed to load truckloads"
-          );
-        }
+        continue;
+      }
 
-        const data: ApiTruckload[] =
-          await response.json();
+      existing.saleCount += 1;
+      existing.grossAmount += grossAmount;
+      existing.amountReceived +=
+        amountReceived;
+      existing.balance += balance;
 
-        setTruckloads(
-          data.map(normalizeTruckload)
-        );
-      } catch (err) {
-        console.error(err);
-
-        setError(
-          "Could not load truckloads from the database."
-        );
-      } finally {
-        setLoading(false);
+      if (existing.balance <= 0) {
+        existing.paymentStatus =
+          "Paid in Full";
+      } else if (
+        existing.amountReceived > 0
+      ) {
+        existing.paymentStatus =
+          "Partial";
+      } else {
+        existing.paymentStatus =
+          "Unpaid";
       }
     }
 
-    void loadTruckloads();
-  }, []);
-
-  const money =
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    });
+    return summaries;
+  }, [sales]);
 
   const totalCost =
     truckloads.reduce(
@@ -169,13 +324,9 @@ export default function TruckloadsPage() {
       !destination.trim() ||
       !Number.isInteger(palletNumber) ||
       palletNumber <= 0 ||
-      !Number.isFinite(
-        purchaseNumber
-      ) ||
+      !Number.isFinite(purchaseNumber) ||
       purchaseNumber < 0 ||
-      !Number.isFinite(
-        freightNumber
-      ) ||
+      !Number.isFinite(freightNumber) ||
       freightNumber < 0
     ) {
       setError(
@@ -227,21 +378,6 @@ export default function TruckloadsPage() {
         );
       }
 
-      const created: ApiTruckload =
-        await response.json();
-
-      const normalized =
-        normalizeTruckload(
-          created
-        );
-
-      setTruckloads(
-        (current) => [
-          normalized,
-          ...current,
-        ]
-      );
-
       setSupplier("");
       setRetailer("");
       setPallets("24");
@@ -252,11 +388,15 @@ export default function TruckloadsPage() {
       );
       setStatus("Planned");
       setShowForm(false);
+
+      await loadData();
     } catch (err) {
       console.error(err);
 
       setError(
-        "Could not save the truckload to the database."
+        err instanceof Error
+          ? err.message
+          : "Could not save the truckload to the database."
       );
     } finally {
       setSaving(false);
@@ -265,7 +405,7 @@ export default function TruckloadsPage() {
 
   return (
     <main className="min-h-screen bg-neutral-950 p-8 text-white">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1500px]">
         <LdcWorkspaceNav />
 
         <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -279,9 +419,8 @@ export default function TruckloadsPage() {
             </h1>
 
             <p className="mt-2 text-neutral-400">
-              Control de compras, costos,
-              pallets y movimientos Alice →
-              Puruándiro.
+              Physical operations, procurement costs
+              and customer receivables by truckload.
             </p>
           </div>
 
@@ -320,14 +459,14 @@ export default function TruckloadsPage() {
 
           <Metric
             title="Landed Cost"
-            value={money.format(
+            value={formatMoney(
               totalCost
             )}
           />
 
           <Metric
             title="Cost / Pallet"
-            value={money.format(
+            value={formatMoney(
               costPerPallet
             )}
           />
@@ -338,38 +477,63 @@ export default function TruckloadsPage() {
             <h2 className="text-lg font-semibold">
               LDC Truckload Registry
             </h2>
+
+            <p className="mt-1 text-sm text-neutral-500">
+              Operational status and customer
+              receivables remain separate.
+            </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[1450px] text-left text-sm">
               <thead className="bg-neutral-950 text-neutral-500">
                 <tr>
-                  <th className="px-6 py-4">
+                  <th className="px-5 py-4">
                     ID
                   </th>
-                  <th className="px-6 py-4">
+
+                  <th className="px-5 py-4">
                     Supplier
                   </th>
-                  <th className="px-6 py-4">
+
+                  <th className="px-5 py-4">
                     Retailer
                   </th>
-                  <th className="px-6 py-4">
+
+                  <th className="px-5 py-4">
                     Pallets
                   </th>
-                  <th className="px-6 py-4">
+
+                  <th className="px-5 py-4">
                     Purchase
                   </th>
-                  <th className="px-6 py-4">
+
+                  <th className="px-5 py-4">
                     Freight
                   </th>
-                  <th className="px-6 py-4">
+
+                  <th className="px-5 py-4">
                     Landed Cost
                   </th>
-                  <th className="px-6 py-4">
+
+                  <th className="px-5 py-4">
                     Destination
                   </th>
-                  <th className="px-6 py-4">
-                    Status
+
+                  <th className="px-5 py-4">
+                    Operational Status
+                  </th>
+
+                  <th className="px-5 py-4">
+                    Customer Payment
+                  </th>
+
+                  <th className="px-5 py-4 text-right">
+                    Collected
+                  </th>
+
+                  <th className="px-5 py-4 text-right">
+                    Balance
                   </th>
                 </tr>
               </thead>
@@ -378,7 +542,7 @@ export default function TruckloadsPage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={12}
                       className="px-6 py-10 text-center text-neutral-500"
                     >
                       Loading truckloads...
@@ -388,11 +552,10 @@ export default function TruckloadsPage() {
                   0 ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={12}
                       className="px-6 py-10 text-center text-neutral-500"
                     >
-                      No truckloads
-                      registered.
+                      No truckloads registered.
                     </td>
                   </tr>
                 ) : (
@@ -402,12 +565,17 @@ export default function TruckloadsPage() {
                         load.purchase +
                         load.freight;
 
+                      const saleSummary =
+                        salesByTruckload.get(
+                          load.id
+                        );
+
                       return (
                         <tr
                           key={load.id}
                           className="border-t border-neutral-800"
                         >
-                          <td className="px-6 py-5 font-semibold">
+                          <td className="px-5 py-5 font-semibold">
                             <Link
                               href={`/ldc/truckloads/${encodeURIComponent(
                                 load.code
@@ -418,48 +586,104 @@ export default function TruckloadsPage() {
                             </Link>
                           </td>
 
-                          <td className="px-6 py-5">
+                          <td className="px-5 py-5">
                             {load.supplier}
                           </td>
 
-                          <td className="px-6 py-5">
+                          <td className="px-5 py-5">
                             {load.retailer}
                           </td>
 
-                          <td className="px-6 py-5">
+                          <td className="px-5 py-5">
                             {load.pallets}
                           </td>
 
-                          <td className="px-6 py-5">
-                            {money.format(
+                          <td className="px-5 py-5">
+                            {formatMoney(
                               load.purchase
                             )}
                           </td>
 
-                          <td className="px-6 py-5">
-                            {money.format(
+                          <td className="px-5 py-5">
+                            {formatMoney(
                               load.freight
                             )}
                           </td>
 
-                          <td className="px-6 py-5 font-semibold">
-                            {money.format(
+                          <td className="px-5 py-5 font-semibold">
+                            {formatMoney(
                               landed
                             )}
                           </td>
 
-                          <td className="px-6 py-5">
-                            {
-                              load.destination
-                            }
+                          <td className="px-5 py-5">
+                            {load.destination}
                           </td>
 
-                          <td className="px-6 py-5">
-                            <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs">
-                              {
+                          <td className="px-5 py-5">
+                            <span
+                              className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${operationalStatusClass(
                                 load.status
-                              }
+                              )}`}
+                            >
+                              {load.status}
                             </span>
+                          </td>
+
+                          <td className="px-5 py-5">
+                            <span
+                              className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${paymentStatusClass(
+                                saleSummary
+                                  ?.paymentStatus ??
+                                  "No Sale"
+                              )}`}
+                            >
+                              {saleSummary
+                                ?.paymentStatus ??
+                                "No Sale"}
+                            </span>
+
+                            {saleSummary &&
+                              saleSummary.saleCount >
+                                1 && (
+                                <div className="mt-1 text-xs text-neutral-500">
+                                  {
+                                    saleSummary.saleCount
+                                  }{" "}
+                                  sales
+                                </div>
+                              )}
+                          </td>
+
+                          <td className="px-5 py-5 text-right font-medium text-emerald-400">
+                            {saleSummary
+                              ? formatMoney(
+                                  saleSummary.amountReceived,
+                                  saleSummary.currency
+                                )
+                              : "—"}
+                          </td>
+
+                          <td className="px-5 py-5 text-right font-medium">
+                            {saleSummary ? (
+                              <span
+                                className={
+                                  saleSummary.balance >
+                                  0
+                                    ? "text-amber-300"
+                                    : "text-emerald-400"
+                                }
+                              >
+                                {formatMoney(
+                                  saleSummary.balance,
+                                  saleSummary.currency
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-neutral-600">
+                                —
+                              </span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -512,18 +736,13 @@ export default function TruckloadsPage() {
                   <input
                     required
                     value={supplier}
-                    onChange={(
-                      event
-                    ) =>
+                    onChange={(event) =>
                       setSupplier(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     placeholder="The Liquidation Group"
-                    className={
-                      inputStyle
-                    }
+                    className={inputStyle}
                   />
                 </Field>
 
@@ -531,18 +750,13 @@ export default function TruckloadsPage() {
                   <input
                     required
                     value={retailer}
-                    onChange={(
-                      event
-                    ) =>
+                    onChange={(event) =>
                       setRetailer(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     placeholder="Lowe's"
-                    className={
-                      inputStyle
-                    }
+                    className={inputStyle}
                   />
                 </Field>
 
@@ -553,17 +767,12 @@ export default function TruckloadsPage() {
                     min="1"
                     step="1"
                     value={pallets}
-                    onChange={(
-                      event
-                    ) =>
+                    onChange={(event) =>
                       setPallets(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
-                    className={
-                      inputStyle
-                    }
+                    className={inputStyle}
                   />
                 </Field>
 
@@ -574,18 +783,13 @@ export default function TruckloadsPage() {
                     min="0"
                     step="0.01"
                     value={purchase}
-                    onChange={(
-                      event
-                    ) =>
+                    onChange={(event) =>
                       setPurchase(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     placeholder="4700"
-                    className={
-                      inputStyle
-                    }
+                    className={inputStyle}
                   />
                 </Field>
 
@@ -596,54 +800,58 @@ export default function TruckloadsPage() {
                     min="0"
                     step="0.01"
                     value={freight}
-                    onChange={(
-                      event
-                    ) =>
+                    onChange={(event) =>
                       setFreight(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
                     placeholder="900"
-                    className={
-                      inputStyle
-                    }
+                    className={inputStyle}
                   />
                 </Field>
 
                 <Field label="Status">
                   <select
                     value={status}
-                    onChange={(
-                      event
-                    ) =>
+                    onChange={(event) =>
                       setStatus(
-                        event.target
-                          .value
+                        event.target.value
                       )
                     }
-                    className={
-                      inputStyle
-                    }
+                    className={inputStyle}
                   >
                     <option>
                       Planned
                     </option>
+
                     <option>
                       Purchased
                     </option>
+
                     <option>
                       In Transit
                     </option>
+
                     <option>
                       Received
                     </option>
+
+                    <option>
+                      Unloading
+                    </option>
+
+                    <option>
+                      Unloaded
+                    </option>
+
                     <option>
                       Processing
                     </option>
+
                     <option>
                       Ready for Export
                     </option>
+
                     <option>
                       Delivered
                     </option>
@@ -654,20 +862,13 @@ export default function TruckloadsPage() {
                   <Field label="Destination">
                     <input
                       required
-                      value={
-                        destination
-                      }
-                      onChange={(
-                        event
-                      ) =>
+                      value={destination}
+                      onChange={(event) =>
                         setDestination(
-                          event.target
-                            .value
+                          event.target.value
                         )
                       }
-                      className={
-                        inputStyle
-                      }
+                      className={inputStyle}
                     />
                   </Field>
                 </div>
@@ -677,9 +878,7 @@ export default function TruckloadsPage() {
                     type="button"
                     disabled={saving}
                     onClick={() =>
-                      setShowForm(
-                        false
-                      )
+                      setShowForm(false)
                     }
                     className="rounded-lg border border-neutral-700 px-5 py-3 font-medium hover:bg-neutral-800 disabled:opacity-50"
                   >
