@@ -100,7 +100,7 @@ export async function GET(request: Request) {
 
     const actor = await getAuthenticatedActor();
 
-    await authorizeOrganizationAccess({
+    const { membership } = await authorizeOrganizationAccess({
       actorId: actor.id,
       organizationId: truckload.organizationId,
     });
@@ -129,6 +129,11 @@ export async function GET(request: Request) {
 
       receiving,
       workers,
+
+      permissions: {
+        canEditCompletedRecords:
+          membership.canEditCompletedRecords,
+      },
     });
   } catch (error) {
     console.error(
