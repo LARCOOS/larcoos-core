@@ -1150,6 +1150,25 @@ export async function POST(request: Request) {
         );
       }
 
+      const hasActualChanges = Object.entries(updateData).some(
+        ([key, value]) => {
+          const currentValue =
+            before[key as keyof typeof before];
+
+          return String(currentValue ?? "") !== String(value ?? "");
+        }
+      );
+
+      if (!hasActualChanges) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "No changes detected",
+          },
+          { status: 400 }
+        );
+      }
+
       const updatedReceiving =
         await db.orm.public.TruckReceiving
           .where({ id: receiving.id })
