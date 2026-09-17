@@ -48,3 +48,6 @@ dist/
 .claude/
 .cursor/
 .devin/
+
+# LARCOOS private evidence storage
+/storage/evidence/

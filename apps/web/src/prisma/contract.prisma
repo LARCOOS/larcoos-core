@@ -786,3 +786,63 @@ model SalePayment {
   @@index([saleId])
   @@index([receivedAt])
 }
+// ============================================================
+// LARCOOS — UNIVERSAL EVIDENCE LAYER v1
+// ============================================================
+
+model EvidenceAsset {
+  id Int @id @default(autoincrement())
+
+  evidenceId String @unique
+
+  organizationId    Int?
+  locationId        Int?
+  uploadedByActorId Int?
+  kernelEventId     Int?
+
+  entityType String
+  entityId   String
+  entityCode String?
+
+  category String
+  purpose  String?
+
+  fileType         String?
+  mimeType         String?
+  originalFilename String
+
+  storageKey String @unique
+  sha256     String
+
+  sizeBytes Int?
+
+  capturedAt TimestamptzString?
+  uploadedAt TimestamptzString @default(now())
+
+  source String @default("LARCOOS")
+
+  verificationStatus String @default("UNVERIFIED")
+
+  metadata String?
+
+  retentionPolicy String @default("BUSINESS_RECORD")
+
+  supersededById Int?
+
+  isActive Boolean @default(true)
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@index([organizationId])
+  @@index([locationId])
+  @@index([uploadedByActorId])
+  @@index([kernelEventId])
+  @@index([entityType, entityId])
+  @@index([entityType, entityCode])
+  @@index([category])
+  @@index([sha256])
+  @@index([verificationStatus])
+  @@index([uploadedAt])
+  @@index([supersededById])
+}
