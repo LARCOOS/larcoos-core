@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ReceivingEvidencePanel from "./ReceivingEvidencePanel";
 
 type ReceivingRecord = {
   id: number;
@@ -143,6 +144,7 @@ export default function ReceivingPanel({
   const [message, setMessage] = useState("");
 
   const [truckloadStatus, setTruckloadStatus] = useState("");
+  const [truckloadId, setTruckloadId] = useState<number | null>(null);
   const [expectedPallets, setExpectedPallets] = useState(0);
   const [defaultFreight, setDefaultFreight] = useState(0);
 
@@ -209,6 +211,7 @@ export default function ReceivingPanel({
       }
 
       if (data.truckload) {
+        setTruckloadId(data.truckload.id);
         setTruckloadStatus(data.truckload.status);
         setExpectedPallets(data.truckload.pallets);
         setDefaultFreight(data.truckload.freight);
@@ -1436,6 +1439,13 @@ export default function ReceivingPanel({
             )}
         </div>
       </div>
+
+      {truckloadId !== null && (
+        <ReceivingEvidencePanel
+          truckloadId={truckloadId}
+          truckloadCode={truckloadCode}
+        />
+      )}
     </section>
   );
 }
