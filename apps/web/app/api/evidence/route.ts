@@ -1,4 +1,6 @@
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
+import { mkdir, unlink, writeFile } from "fs/promises";
+import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/prisma/db";
 import { requireAuthenticatedSession } from "@/src/kernel/session";
@@ -242,6 +244,57 @@ function makeEventId() {
   return `EVIDENCE_UPLOADED-${randomUUID()}`;
 }
 
+const EVIDENCE_V11_MAX_BYTES = 25 * 1024 * 1024;
+const EVIDENCE_V11_STORAGE_ROOT = path.join(process.cwd(), "storage", "evidence");
+
+const EVIDENCE_V11_ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+]);
+
+function evidenceV11Required(formData: FormData, key: string) {
+  const value = formData.get(key);
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`VALIDATION:${key} is required`);
+  }
+  return value.trim();
+}
+
+function evidenceV11Optional(formData: FormData, key: string) {
+  const value = formData.get(key);
+  if (value === null || value === "") return null;
+  if (typeof value !== "string") {
+    throw new Error(`VALIDATION:${key} must be text`);
+  }
+  return value.trim() || null;
+}
+
+function evidenceV11SafeSegment(value: string) {
+  const safe = value
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  if (!safe) {
+    throw new Error("VALIDATION:Invalid evidence storage segment");
+  }
+
+  return safe.slice(0, 120);
+}
+
+function evidenceV11Extension(mimeType: string) {
+  switch (mimeType) {
+    case "image/jpeg": return ".jpg";
+    case "image/png": return ".png";
+    case "image/webp": return ".webp";
+    case "application/pdf": return ".pdf";
+    default:
+      throw new Error("VALIDATION:Unsupported evidence file type");
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { organization } = await authorizeLdc();
@@ -308,335 +361,323 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  let physicalPath: string | null = null;
+  let evidenceCreated = false;
+
   try {
-    const {
-      actor,
-      organization,
-    } = await authorizeLdc();
+    const { actor, organization } = await authorizeLdc();
 
-    let body: EvidenceCreateBody;
+    const contentType = request.headers.get("content-type") ?? "";
 
-    try {
-      body =
-        (await request.json()) as EvidenceCreateBody;
-    } catch {
+    if (!contentType.toLowerCase().includes("multipart/form-data")) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid JSON body",
+          error: "Content-Type must be multipart/form-data",
         },
-        { status: 400 }
+        { status: 415 }
       );
     }
 
-    try {
-      const entityType = requiredString(
-        body.entityType,
-        "entityType"
-      ).toUpperCase();
+    const formData = await request.formData();
+    const fileEntry = formData.get("file");
 
-      if (!ALLOWED_ENTITY_TYPES.has(entityType)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Unsupported entityType",
-          },
-          { status: 400 }
-        );
-      }
+    if (!(fileEntry instanceof File)) {
+      throw new Error("VALIDATION:file is required");
+    }
 
-      const entityId = requiredString(
-        body.entityId,
-        "entityId"
+    if (fileEntry.size <= 0) {
+      throw new Error("VALIDATION:file cannot be empty");
+    }
+
+    if (fileEntry.size > EVIDENCE_V11_MAX_BYTES) {
+      throw new Error(
+        "VALIDATION:file exceeds the 25 MB evidence limit"
       );
+    }
 
-      const entityCode =
-        optionalString(body.entityCode);
-
-      const category = requiredString(
-        body.category,
-        "category"
-      ).toUpperCase();
-
-      const purpose =
-        optionalString(body.purpose);
-
-      const originalFilename = requiredString(
-        body.originalFilename,
-        "originalFilename"
+    if (!EVIDENCE_V11_ALLOWED_MIME_TYPES.has(fileEntry.type)) {
+      throw new Error(
+        "VALIDATION:Only JPEG, PNG, WebP, and PDF evidence is allowed"
       );
+    }
 
-      const storageKey = requiredString(
-        body.storageKey,
-        "storageKey"
-      );
+    const entityType = evidenceV11Required(
+      formData,
+      "entityType"
+    ).toUpperCase();
 
-      const sha256 = requiredString(
-        body.sha256,
-        "sha256"
-      ).toLowerCase();
+    const entityId = evidenceV11Required(
+      formData,
+      "entityId"
+    );
 
-      if (!/^[a-f0-9]{64}$/.test(sha256)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "sha256 must be a 64-character hexadecimal SHA-256 hash",
-          },
-          { status: 400 }
+    const entityCode = evidenceV11Optional(
+      formData,
+      "entityCode"
+    );
+
+    const category = evidenceV11Required(
+      formData,
+      "category"
+    ).toUpperCase();
+
+    const purpose = evidenceV11Optional(
+      formData,
+      "purpose"
+    );
+
+    const locationRaw = evidenceV11Optional(
+      formData,
+      "locationId"
+    );
+
+    let locationId: number | null = null;
+
+    if (locationRaw !== null) {
+      locationId = Number(locationRaw);
+
+      if (!Number.isInteger(locationId) || locationId <= 0) {
+        throw new Error(
+          "VALIDATION:locationId must be a positive integer"
         );
       }
 
-      const verificationStatus =
-        requiredString(
-          body.verificationStatus ?? "UNVERIFIED",
-          "verificationStatus"
-        ).toUpperCase();
-
-      if (
-        !ALLOWED_VERIFICATION_STATUSES.has(
-          verificationStatus
-        )
-      ) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Unsupported verificationStatus",
-          },
-          { status: 400 }
-        );
-      }
-
-      const locationId =
-        optionalPositiveInteger(
-          body.locationId,
-          "locationId"
-        );
-
-      const kernelEventId =
-        optionalPositiveInteger(
-          body.kernelEventId,
-          "kernelEventId"
-        );
-
-      const supersededById =
-        optionalPositiveInteger(
-          body.supersededById,
-          "supersededById"
-        );
-
-      const sizeBytes =
-        optionalNonNegativeInteger(
-          body.sizeBytes,
-          "sizeBytes"
-        );
-
-      const capturedAt =
-        optionalTimestamp(
-          body.capturedAt,
-          "capturedAt"
-        );
-
-      const source =
-        optionalString(body.source) ??
-        "LARCOOS";
-
-      const retentionPolicy =
-        optionalString(body.retentionPolicy) ??
-        "BUSINESS_RECORD";
-
-      let metadata: string | null = null;
-
-      if (
-        body.metadata !== undefined &&
-        body.metadata !== null
-      ) {
-        metadata =
-          typeof body.metadata === "string"
-            ? body.metadata
-            : JSON.stringify(body.metadata);
-      }
-
-      if (locationId !== null) {
-        const location =
-          await db.orm.public.Location
-            .where({
-              id: locationId,
-              organizationId: organization.id,
-            })
-            .first();
-
-        if (!location) {
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                "Location does not belong to LDC",
-            },
-            { status: 400 }
-          );
-        }
-      }
-
-      const existingStorageKey =
-        await db.orm.public.EvidenceAsset
-          .where({ storageKey })
+      const location =
+        await db.orm.public.Location
+          .where({ id: locationId })
           .first();
 
-      if (existingStorageKey) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "storageKey is already registered",
-          },
-          { status: 409 }
+      if (
+        !location ||
+        location.organizationId !== organization.id
+      ) {
+        throw new Error(
+          "VALIDATION:Location does not belong to LDC"
+        );
+      }
+    }
+
+    const capturedRaw = evidenceV11Optional(
+      formData,
+      "capturedAt"
+    );
+
+    let capturedAt: string | null = null;
+
+    if (capturedRaw !== null) {
+      const capturedDate = new Date(capturedRaw);
+
+      if (Number.isNaN(capturedDate.getTime())) {
+        throw new Error(
+          "VALIDATION:capturedAt must be a valid timestamp"
         );
       }
 
-      const evidenceId = makeEvidenceId();
+      capturedAt = capturedDate.toISOString();
+    }
 
-      const evidence =
-        await db.orm.public.EvidenceAsset.create({
-          evidenceId,
+    const metadataRaw = evidenceV11Optional(
+      formData,
+      "metadata"
+    );
 
-          organizationId:
-            organization.id,
+    let metadata: string | null = null;
 
-          locationId,
+    if (metadataRaw !== null) {
+      try {
+        metadata = JSON.stringify(
+          JSON.parse(metadataRaw)
+        );
+      } catch {
+        throw new Error(
+          "VALIDATION:metadata must be valid JSON"
+        );
+      }
+    }
 
-          uploadedByActorId:
-            actor.id,
+    const bytes = Buffer.from(
+      await fileEntry.arrayBuffer()
+    );
 
-          kernelEventId,
+    const sha256 = createHash("sha256")
+      .update(bytes)
+      .digest("hex");
 
-          entityType,
-          entityId,
-          entityCode,
+    const evidenceId = makeEvidenceId();
+
+    const extension =
+      evidenceV11Extension(fileEntry.type);
+
+    const segments = [
+      evidenceV11SafeSegment(organization.code),
+      evidenceV11SafeSegment(entityType),
+      evidenceV11SafeSegment(entityId),
+      evidenceV11SafeSegment(category),
+      `${evidenceV11SafeSegment(evidenceId)}${extension}`,
+    ];
+
+    const storageKey =
+      path.posix.join(...segments);
+
+    const directoryPath = path.join(
+      EVIDENCE_V11_STORAGE_ROOT,
+      ...segments.slice(0, -1)
+    );
+
+    physicalPath = path.join(
+      EVIDENCE_V11_STORAGE_ROOT,
+      ...segments
+    );
+
+    await mkdir(directoryPath, {
+      recursive: true,
+    });
+
+    await writeFile(
+      physicalPath,
+      bytes,
+      { flag: "wx" }
+    );
+    const evidence =
+      await db.orm.public.EvidenceAsset.create({
+        evidenceId,
+        organizationId: organization.id,
+        locationId,
+        uploadedByActorId: actor.id,
+        kernelEventId: null,
+
+        entityType,
+        entityId,
+        entityCode,
+
+        category,
+        purpose,
+
+        fileType: extension.slice(1),
+        mimeType: fileEntry.type,
+
+        originalFilename:
+          fileEntry.name || `evidence${extension}`,
+
+        storageKey,
+        sha256,
+        sizeBytes: fileEntry.size,
+
+        capturedAt,
+
+        source: "LARCOOS",
+        verificationStatus: "UNVERIFIED",
+
+        metadata,
+
+        retentionPolicy: "BUSINESS_RECORD",
+        supersededById: null,
+        isActive: true,
+      });
+
+    if (!evidence) {
+      throw new Error(
+        "Evidence asset could not be created"
+      );
+    }
+
+    evidenceCreated = true;
+
+    const occurredAt =
+      new Date().toISOString();
+
+    const event =
+      await db.orm.public.KernelEvent.create({
+        eventId: makeEventId(),
+        eventType: "EVIDENCE_UPLOADED",
+
+        organizationId: organization.id,
+        locationId,
+
+        actorId: actor.id,
+
+        entityType,
+        entityId,
+        entityCode,
+
+        source: "LARCOOS",
+
+        payload: JSON.stringify({
+          evidenceVersion: "1.1",
+
+          evidenceId:
+            evidence.evidenceId,
 
           category,
           purpose,
 
-          fileType:
-            optionalString(body.fileType),
-
-          mimeType:
-            optionalString(body.mimeType),
-
-          originalFilename,
+          originalFilename:
+            fileEntry.name,
 
           storageKey,
           sha256,
-          sizeBytes,
 
-          capturedAt,
+          sizeBytes:
+            fileEntry.size,
 
-          source,
+          mimeType:
+            fileEntry.type,
 
-          verificationStatus,
+          verificationStatus:
+            "UNVERIFIED",
 
-          metadata,
+          retentionPolicy:
+            "BUSINESS_RECORD",
 
-          retentionPolicy,
-
-          supersededById,
-
-          isActive: true,
-        });
-
-      if (!evidence) {
-        throw new Error(
-          "Evidence asset could not be created"
-        );
-      }
-
-      const occurredAt = new Date().toISOString();
-
-      const event =
-        await db.orm.public.KernelEvent.create({
-          eventId: makeEventId(),
-
-          eventType: "EVIDENCE_UPLOADED",
-
-          organizationId:
-            organization.id,
-
-          locationId,
-
-          actorId: actor.id,
-
-          entityType,
-          entityId,
-          entityCode,
-
-          source: "LARCOOS",
-
-          payload: JSON.stringify({
-            evidenceVersion: "1.0",
-
-            evidenceId:
-              evidence.evidenceId,
-
-            category,
-            purpose,
-
-            originalFilename,
-            storageKey,
-            sha256,
-            sizeBytes,
-
-            mimeType:
-              optionalString(body.mimeType),
-
-            verificationStatus,
-            retentionPolicy,
-
-            uploadedBy: {
-              actorId: actor.id,
-              actorCode: actor.code,
-              displayName:
-                actor.displayName,
-              systemRole:
-                actor.systemRole,
-            },
-
-            occurredAt,
-          }),
-        });
-
-      if (!event) {
-        throw new Error(
-          "Evidence kernel event could not be created"
-        );
-      }
-
-      return NextResponse.json(
-        {
-          success: true,
-          evidence,
-          event: {
-            id: event.id,
-            eventId: event.eventId,
-            eventType: event.eventType,
+          uploadedBy: {
+            actorId: actor.id,
+            actorCode: actor.code,
+            displayName:
+              actor.displayName,
+            systemRole:
+              actor.systemRole,
           },
-        },
-        { status: 201 }
+
+          occurredAt,
+        }),
+      });
+
+    if (!event) {
+      throw new Error(
+        "Evidence kernel event could not be created"
       );
-    } catch (error) {
-      const response =
-        validationResponse(error);
-
-      if (response) {
-        return response;
-      }
-
-      throw error;
     }
+
+    return NextResponse.json(
+      {
+        success: true,
+        evidence,
+        event: {
+          id: event.id,
+          eventId: event.eventId,
+          eventType: event.eventType,
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
+    if (physicalPath && !evidenceCreated) {
+      try {
+        await unlink(physicalPath);
+      } catch {}
+    }
+
+    const response =
+      validationResponse(error);
+
+    if (response) {
+      return response;
+    }
+
     return errorResponse(
       error,
-      "Evidence creation"
+      "Evidence upload"
     );
   }
 }
