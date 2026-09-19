@@ -570,7 +570,9 @@ model Pallet {
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
 
-  @@unique([truckloadId, palletNumber])
+  @@unique([truckloadId, palletType, palletNumber])
+  @@index([truckloadId, palletType])
+  @@index([sourcePalletId])
 }
 
 // ============================================================

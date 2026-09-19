@@ -997,6 +997,278 @@ export async function POST(request: Request) {
       });
     }
 
+    if (action === "create-rebuilt-pallet") {
+      const existingBuiltPallets =
+        await db.orm.public.Pallet
+          .where({
+            truckloadId: truckload.id,
+            palletType: "LDC_BUILT",
+          })
+          .all();
+
+      const nextPalletNumber =
+        existingBuiltPallets.reduce(
+          (highest, existingPallet) =>
+            Math.max(
+              highest,
+              existingPallet.palletNumber
+            ),
+          0
+        ) + 1;
+
+      const palletCode =
+        `${truckload.code}-R${String(
+          nextPalletNumber
+        ).padStart(2, "0")}`;
+
+      const rebuiltPallet =
+        await db.orm.public.Pallet.create({
+          code: palletCode,
+          truckloadId: truckload.id,
+          palletNumber: nextPalletNumber,
+          status: "Processing",
+          description: optionalText(body.description),
+          category: optionalText(body.category),
+          condition: optionalText(body.condition),
+          notes: optionalText(body.notes),
+          estimatedPieces: null,
+          processedPieces: 0,
+          palletType: "LDC_BUILT",
+          processingMode: "FULL_PROCESSING",
+          verificationLevel: "MANIFEST_ONLY",
+          sourcePalletId: null,
+          processingCompleted: false,
+          manifestReady: false,
+        });
+
+      await createProcessingEvent({
+        eventType: "REBUILT_PALLET_CREATED",
+        truckload,
+        actorId: actor.id,
+        entityType: "PALLET",
+        entityId: String(rebuiltPallet.id),
+        entityCode: rebuiltPallet.code,
+        payload: {
+          palletId: rebuiltPallet.id,
+          palletCode: rebuiltPallet.code,
+          palletNumber: rebuiltPallet.palletNumber,
+          palletType: rebuiltPallet.palletType,
+          processingMode: rebuiltPallet.processingMode,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          success: true,
+          action: "create-rebuilt-pallet",
+          pallet: rebuiltPallet,
+        },
+        { status: 201 }
+      );
+    }
+
+    if (action === "assign-unit-to-pallet") {
+      const unitId = Number(body.unitId);
+      const destinationPalletId =
+        Number(body.palletId);
+
+      if (
+        !Number.isInteger(unitId) ||
+        unitId <= 0
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Valid unitId is required",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (
+        !Number.isInteger(destinationPalletId) ||
+        destinationPalletId <= 0
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Valid palletId is required",
+          },
+          { status: 400 }
+        );
+      }
+
+      const unit =
+        await db.orm.public.InventoryUnit
+          .where({
+            id: unitId,
+            truckloadId: truckload.id,
+          })
+          .first();
+
+      if (!unit) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Inventory unit not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      const destinationPallet =
+        await db.orm.public.Pallet
+          .where({
+            id: destinationPalletId,
+            truckloadId: truckload.id,
+          })
+          .first();
+
+      if (!destinationPallet) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Destination pallet not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      if (
+        destinationPallet.palletType !==
+        "LDC_BUILT"
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Inventory units can only be assigned to an LDC_BUILT pallet",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (destinationPallet.processingCompleted) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Destination pallet processing is already completed",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (unit.palletId === destinationPallet.id) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Inventory unit is already assigned to this pallet",
+          },
+          { status: 409 }
+        );
+      }
+
+      const previousPalletId = unit.palletId;
+
+      let previousPallet = null;
+
+      if (previousPalletId !== null) {
+        previousPallet =
+          await db.orm.public.Pallet
+            .where({
+              id: previousPalletId,
+              truckloadId: truckload.id,
+            })
+            .first();
+      }
+
+      await db.orm.public.InventoryUnit
+        .where({ id: unit.id })
+        .update({
+          palletId: destinationPallet.id,
+        });
+
+      const destinationUnits =
+        await db.orm.public.InventoryUnit
+          .where({
+            truckloadId: truckload.id,
+            palletId: destinationPallet.id,
+          })
+          .all();
+
+      await db.orm.public.Pallet
+        .where({ id: destinationPallet.id })
+        .update({
+          processedPieces: destinationUnits.length,
+        });
+
+      if (
+        previousPallet &&
+        previousPallet.palletType === "LDC_BUILT"
+      ) {
+        const previousUnits =
+          await db.orm.public.InventoryUnit
+            .where({
+              truckloadId: truckload.id,
+              palletId: previousPallet.id,
+            })
+            .all();
+
+        await db.orm.public.Pallet
+          .where({ id: previousPallet.id })
+          .update({
+            processedPieces: previousUnits.length,
+          });
+      }
+
+      const movedUnit =
+        await db.orm.public.InventoryUnit
+          .where({ id: unit.id })
+          .first();
+
+      if (!movedUnit) {
+        throw new Error(
+          "INVENTORY_UNIT_REPALLETIZATION_READ_FAILED"
+        );
+      }
+
+      await createProcessingEvent({
+        eventType:
+          "INVENTORY_UNIT_REPALLETIZED",
+        truckload,
+        actorId: actor.id,
+        entityType: "ITEM",
+        entityId: String(movedUnit.id),
+        entityCode: movedUnit.unitId,
+        payload: {
+          unitId: movedUnit.unitId,
+          sourcePalletId:
+            movedUnit.sourcePalletId,
+          previousPalletId,
+          previousPalletCode:
+            previousPallet?.code ?? null,
+          destinationPalletId:
+            destinationPallet.id,
+          destinationPalletCode:
+            destinationPallet.code,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        action: "assign-unit-to-pallet",
+        unit: serializeUnit(movedUnit),
+        lineage: {
+          sourcePalletId:
+            movedUnit.sourcePalletId,
+          previousPalletId,
+          destinationPalletId:
+            destinationPallet.id,
+        },
+      });
+    }
     return NextResponse.json(
       {
         success: false,
