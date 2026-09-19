@@ -20,6 +20,10 @@
       "model": "EvidenceAsset",
       "namespace": "public"
     },
+    "inventoryUnit": {
+      "model": "InventoryUnit",
+      "namespace": "public"
+    },
     "kernelEvent": {
       "model": "KernelEvent",
       "namespace": "public"
@@ -846,6 +850,317 @@
               "table": "evidenceAsset"
             }
           },
+          "InventoryUnit": {
+            "fields": {
+              "actualListPrice": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "aiConfidence": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "aiMetadata": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "assignedCost": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "brand": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "category": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "condition": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "currency": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "description": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "disposition": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "manufacturer": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "model": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "palletId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "processedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "processingStatus": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "serialNumber": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sku": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourcePalletId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "suggestedPrice": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "title": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "truckloadId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "unitId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "unitNumber": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "upc": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "verificationLevel": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "actualListPrice": {
+                  "column": "actualListPrice"
+                },
+                "aiConfidence": {
+                  "column": "aiConfidence"
+                },
+                "aiMetadata": {
+                  "column": "aiMetadata"
+                },
+                "assignedCost": {
+                  "column": "assignedCost"
+                },
+                "brand": {
+                  "column": "brand"
+                },
+                "category": {
+                  "column": "category"
+                },
+                "condition": {
+                  "column": "condition"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "currency": {
+                  "column": "currency"
+                },
+                "description": {
+                  "column": "description"
+                },
+                "disposition": {
+                  "column": "disposition"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "manufacturer": {
+                  "column": "manufacturer"
+                },
+                "model": {
+                  "column": "model"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "palletId": {
+                  "column": "palletId"
+                },
+                "processedAt": {
+                  "column": "processedAt"
+                },
+                "processingStatus": {
+                  "column": "processingStatus"
+                },
+                "serialNumber": {
+                  "column": "serialNumber"
+                },
+                "sku": {
+                  "column": "sku"
+                },
+                "sourcePalletId": {
+                  "column": "sourcePalletId"
+                },
+                "suggestedPrice": {
+                  "column": "suggestedPrice"
+                },
+                "title": {
+                  "column": "title"
+                },
+                "truckloadId": {
+                  "column": "truckloadId"
+                },
+                "unitId": {
+                  "column": "unitId"
+                },
+                "unitNumber": {
+                  "column": "unitNumber"
+                },
+                "upc": {
+                  "column": "upc"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "verificationLevel": {
+                  "column": "verificationLevel"
+                }
+              },
+              "namespaceId": "public",
+              "table": "inventoryUnit"
+            }
+          },
           "KernelEvent": {
             "fields": {
               "actorId": {
@@ -1666,6 +1981,13 @@
                   "kind": "scalar"
                 }
               },
+              "manifestReady": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
               "notes": {
                 "nullable": true,
                 "type": {
@@ -1680,8 +2002,36 @@
                   "kind": "scalar"
                 }
               },
+              "palletType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "processedPieces": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "processingCompleted": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "processingMode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourcePalletId": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
@@ -1705,6 +2055,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "verificationLevel": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               }
@@ -1750,14 +2107,29 @@
                 "id": {
                   "column": "id"
                 },
+                "manifestReady": {
+                  "column": "manifestReady"
+                },
                 "notes": {
                   "column": "notes"
                 },
                 "palletNumber": {
                   "column": "palletNumber"
                 },
+                "palletType": {
+                  "column": "palletType"
+                },
                 "processedPieces": {
                   "column": "processedPieces"
+                },
+                "processingCompleted": {
+                  "column": "processingCompleted"
+                },
+                "processingMode": {
+                  "column": "processingMode"
+                },
+                "sourcePalletId": {
+                  "column": "sourcePalletId"
                 },
                 "status": {
                   "column": "status"
@@ -1767,6 +2139,9 @@
                 },
                 "updatedAt": {
                   "column": "updatedAt"
+                },
+                "verificationLevel": {
+                  "column": "verificationLevel"
                 }
               },
               "namespaceId": "public",
@@ -3516,6 +3891,285 @@
                 }
               ]
             },
+            "inventoryUnit": {
+              "columns": {
+                "actualListPrice": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": true
+                },
+                "aiConfidence": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": true
+                },
+                "aiMetadata": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "assignedCost": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": true
+                },
+                "brand": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "category": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "condition": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "currency": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "USD"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "description": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "disposition": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "SALE_READY"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "manufacturer": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "model": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "organizationId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "palletId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "processedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "processingStatus": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PENDING"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "serialNumber": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "sku": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "sourcePalletId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "suggestedPrice": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": true
+                },
+                "title": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "truckloadId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "unitId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "unitNumber": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "upc": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "verificationLevel": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "MANIFEST_ONLY"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "disposition"
+                  ],
+                  "name": "inventoryUnit_disposition_idx_93b73388",
+                  "prefix": "inventoryUnit_disposition_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId"
+                  ],
+                  "name": "inventoryUnit_organizationId_idx_2e17ef41",
+                  "prefix": "inventoryUnit_organizationId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "palletId"
+                  ],
+                  "name": "inventoryUnit_palletId_idx_36456697",
+                  "prefix": "inventoryUnit_palletId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "processingStatus"
+                  ],
+                  "name": "inventoryUnit_processingStatus_idx_6f216ba4",
+                  "prefix": "inventoryUnit_processingStatus_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "serialNumber"
+                  ],
+                  "name": "inventoryUnit_serialNumber_idx_ba64041b",
+                  "prefix": "inventoryUnit_serialNumber_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sku"
+                  ],
+                  "name": "inventoryUnit_sku_idx_506e4b93",
+                  "prefix": "inventoryUnit_sku_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sourcePalletId"
+                  ],
+                  "name": "inventoryUnit_sourcePalletId_idx_c9ee93b8",
+                  "prefix": "inventoryUnit_sourcePalletId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "truckloadId"
+                  ],
+                  "name": "inventoryUnit_truckloadId_idx_6430a1ac",
+                  "prefix": "inventoryUnit_truckloadId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "upc"
+                  ],
+                  "name": "inventoryUnit_upc_idx_7a7047fd",
+                  "prefix": "inventoryUnit_upc_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "verificationLevel"
+                  ],
+                  "name": "inventoryUnit_verificationLevel_idx_dcf816bd",
+                  "prefix": "inventoryUnit_verificationLevel_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "unitId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "truckloadId",
+                    "unitNumber"
+                  ]
+                }
+              ]
+            },
             "kernelEvent": {
               "columns": {
                 "actorId": {
@@ -4113,6 +4767,15 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "manifestReady": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
                 "notes": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -4123,6 +4786,15 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "palletType": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "SOURCE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
                 "processedPieces": {
                   "codecId": "pg/int4@1",
                   "default": {
@@ -4131,6 +4803,25 @@
                   },
                   "nativeType": "int4",
                   "nullable": false
+                },
+                "processingCompleted": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "processingMode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "sourcePalletId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
                 },
                 "status": {
                   "codecId": "pg/text@1",
@@ -4149,6 +4840,15 @@
                 "updatedAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "verificationLevel": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "MANIFEST_ONLY"
+                  },
+                  "nativeType": "text",
                   "nullable": false
                 }
               },
@@ -5048,10 +5748,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "59b440673d5f1093a79d7f9073c9ff3f7c37fa865eef097d75ee2bcaf56d01e1"
+    "storageHash": "885661e3d877ee13b3f3174d91993e7107bbdc3cdee3dc5cf6dbf7a4fe9e7e12"
   },
   "execution": {
-    "executionHash": "2a7e46a2be1598b5500a455cce0677acfad148a3d60eb31d9106fd2deaca9f9b",
+    "executionHash": "2c66e46d666fd6acd3cf375145c40300ee6414e1c344192631c93d8bded40a6a",
     "mutations": {
       "defaults": [
         {
@@ -5112,6 +5812,21 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "evidenceAsset"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "inventoryUnit"
           }
         },
         {

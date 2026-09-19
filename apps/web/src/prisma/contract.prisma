@@ -527,6 +527,40 @@ model Pallet {
   estimatedPieces Int?
   processedPieces Int @default(0)
 
+  // Processing v1
+  //
+  // SOURCE:
+  // Pallet received from the original supplier/truckload.
+  //
+  // LDC_BUILT:
+  // New pallet assembled by LDC after processing/classification.
+  palletType String @default("SOURCE")
+
+  // FULL_PROCESSING:
+  // LDC opens/processes merchandise and may create unit records.
+  //
+  // PALLET_VERIFICATION:
+  // LDC keeps merchandise palletized and verifies the pallet only.
+  processingMode String?
+
+  // MANIFEST_ONLY
+  // PALLET_VERIFIED
+  // PHYSICALLY_VERIFIED
+  // FUNCTION_TESTED
+  // SALE_READY
+  verificationLevel String @default("MANIFEST_ONLY")
+
+  // For an LDC_BUILT pallet, records the primary source pallet when
+  // there is one. Full many-to-many genealogy can be added later.
+  sourcePalletId Int?
+
+  // True after LDC has completed the processing/verification required
+  // for this pallet's selected processing mode.
+  processingCompleted Boolean @default(false)
+
+  // True when the pallet is eligible to appear on an LDC manifest.
+  manifestReady Boolean @default(false)
+
   truckload Truckload @relation(
     fields: [truckloadId],
     references: [id],
@@ -539,6 +573,108 @@ model Pallet {
   @@unique([truckloadId, palletNumber])
 }
 
+// ============================================================
+// LDC — INVENTORY UNIT / PROCESSING v1
+// ============================================================
+//
+// Created only when merchandise is processed at unit level.
+// PALLET_VERIFICATION does not require unit records.
+//
+// This is LDC operational inventory. A future ViDaMar inventory
+// record will be separate and linked through cross-organization
+// transfer / lineage instead of changing ownership of this row.
+//
+
+model InventoryUnit {
+  id Int @id @default(autoincrement())
+
+  // Permanent LDC identity, for example:
+  // LDC-2026-001-P01-I0001
+  unitId String @unique
+
+  organizationId Int
+  truckloadId    Int
+
+  // Current LDC pallet after processing/repacking.
+  palletId Int?
+
+  // Original supplier/source pallet when known.
+  sourcePalletId Int?
+
+  // Sequence inside the processed pallet/truckload.
+  unitNumber Int
+
+  // Product identity
+  upc          String?
+  sku          String?
+  manufacturer String?
+  brand        String?
+  model        String?
+  serialNumber String?
+
+  title       String?
+  description String?
+  category    String?
+
+  // NEW_SEALED
+  // NEW_OPEN_BOX
+  // USED_LIKE_NEW
+  // USED_GOOD
+  // USED
+  // DAMAGED
+  condition String?
+
+  // MANIFEST_ONLY
+  // PHYSICALLY_VERIFIED
+  // FUNCTION_TESTED
+  // SALE_READY
+  verificationLevel String @default("MANIFEST_ONLY")
+
+  // SALE_READY
+  // CLEANING
+  // REPAIR
+  // BACKYARD
+  // SALVAGE
+  // DISPOSAL
+  disposition String @default("SALE_READY")
+
+  // Processing state is independent from commercial state.
+  processingStatus String @default("PENDING")
+
+  // Cost belongs to accounting/history.
+  assignedCost Decimal?
+
+  // Pricing is a recommendation/decision and must not rewrite cost.
+  suggestedPrice Decimal?
+  actualListPrice Decimal?
+
+  currency String @default("USD")
+
+  // Future AI pricing/identification metadata.
+  aiConfidence Decimal?
+  aiMetadata   String?
+
+  notes String?
+
+  processedAt TimestamptzString?
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@unique([truckloadId, unitNumber])
+  @@index([organizationId])
+  @@index([truckloadId])
+  @@index([palletId])
+  @@index([sourcePalletId])
+  @@index([upc])
+  @@index([sku])
+  @@index([serialNumber])
+  @@index([verificationLevel])
+  @@index([disposition])
+  @@index([processingStatus])
+}
+
+// ============================================================
 // ============================================================
 // LDC — RECEIVING / UNLOADING
 //

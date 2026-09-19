@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'885661e3d877ee13b3f3174d91993e7107bbdc3cdee3dc5cf6dbf7a4fe9e7e12'>;
+  StorageHashBase<'3ed4e818ecaea6bea928657d0a11c5cfef5e61924579f13356f14c3c19a82b93'>;
 export type ExecutionHash =
-  ExecutionHashBase<'2c66e46d666fd6acd3cf375145c40300ee6414e1c344192631c93d8bded40a6a'>;
+  ExecutionHashBase<'2a7e46a2be1598b5500a455cce0677acfad148a3d60eb31d9106fd2deaca9f9b'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -311,38 +311,6 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
-    readonly InventoryUnit: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly unitId: CodecTypes['pg/text@1']['output'];
-      readonly organizationId: CodecTypes['pg/int4@1']['output'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['output'];
-      readonly palletId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly sourcePalletId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly unitNumber: CodecTypes['pg/int4@1']['output'];
-      readonly upc: CodecTypes['pg/text@1']['output'] | null;
-      readonly sku: CodecTypes['pg/text@1']['output'] | null;
-      readonly manufacturer: CodecTypes['pg/text@1']['output'] | null;
-      readonly brand: CodecTypes['pg/text@1']['output'] | null;
-      readonly model: CodecTypes['pg/text@1']['output'] | null;
-      readonly serialNumber: CodecTypes['pg/text@1']['output'] | null;
-      readonly title: CodecTypes['pg/text@1']['output'] | null;
-      readonly description: CodecTypes['pg/text@1']['output'] | null;
-      readonly category: CodecTypes['pg/text@1']['output'] | null;
-      readonly condition: CodecTypes['pg/text@1']['output'] | null;
-      readonly verificationLevel: CodecTypes['pg/text@1']['output'];
-      readonly disposition: CodecTypes['pg/text@1']['output'];
-      readonly processingStatus: CodecTypes['pg/text@1']['output'];
-      readonly assignedCost: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly suggestedPrice: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly actualListPrice: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly aiConfidence: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly aiMetadata: CodecTypes['pg/text@1']['output'] | null;
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly processedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
     readonly KernelEvent: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly eventId: CodecTypes['pg/text@1']['output'];
@@ -583,38 +551,6 @@ export type FieldInputTypes = {
       readonly retentionPolicy: CodecTypes['pg/text@1']['input'];
       readonly supersededById: CodecTypes['pg/int4@1']['input'] | null;
       readonly isActive: CodecTypes['pg/bool@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly InventoryUnit: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly unitId: CodecTypes['pg/text@1']['input'];
-      readonly organizationId: CodecTypes['pg/int4@1']['input'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['input'];
-      readonly palletId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly sourcePalletId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly unitNumber: CodecTypes['pg/int4@1']['input'];
-      readonly upc: CodecTypes['pg/text@1']['input'] | null;
-      readonly sku: CodecTypes['pg/text@1']['input'] | null;
-      readonly manufacturer: CodecTypes['pg/text@1']['input'] | null;
-      readonly brand: CodecTypes['pg/text@1']['input'] | null;
-      readonly model: CodecTypes['pg/text@1']['input'] | null;
-      readonly serialNumber: CodecTypes['pg/text@1']['input'] | null;
-      readonly title: CodecTypes['pg/text@1']['input'] | null;
-      readonly description: CodecTypes['pg/text@1']['input'] | null;
-      readonly category: CodecTypes['pg/text@1']['input'] | null;
-      readonly condition: CodecTypes['pg/text@1']['input'] | null;
-      readonly verificationLevel: CodecTypes['pg/text@1']['input'];
-      readonly disposition: CodecTypes['pg/text@1']['input'];
-      readonly processingStatus: CodecTypes['pg/text@1']['input'];
-      readonly assignedCost: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly suggestedPrice: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly actualListPrice: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly aiConfidence: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly aiMetadata: CodecTypes['pg/text@1']['input'] | null;
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly processedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -861,38 +797,6 @@ export type StorageColumnTypes = {
       readonly uploadedByActorId: CodecTypes['pg/int4@1']['output'] | null;
       readonly verificationStatus: CodecTypes['pg/text@1']['output'];
     };
-    readonly inventoryUnit: {
-      readonly actualListPrice: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly aiConfidence: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly aiMetadata: CodecTypes['pg/text@1']['output'] | null;
-      readonly assignedCost: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly brand: CodecTypes['pg/text@1']['output'] | null;
-      readonly category: CodecTypes['pg/text@1']['output'] | null;
-      readonly condition: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly description: CodecTypes['pg/text@1']['output'] | null;
-      readonly disposition: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly manufacturer: CodecTypes['pg/text@1']['output'] | null;
-      readonly model: CodecTypes['pg/text@1']['output'] | null;
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly organizationId: CodecTypes['pg/int4@1']['output'];
-      readonly palletId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly processedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly processingStatus: CodecTypes['pg/text@1']['output'];
-      readonly serialNumber: CodecTypes['pg/text@1']['output'] | null;
-      readonly sku: CodecTypes['pg/text@1']['output'] | null;
-      readonly sourcePalletId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly suggestedPrice: CodecTypes['pg/numeric@1']['output'] | null;
-      readonly title: CodecTypes['pg/text@1']['output'] | null;
-      readonly truckloadId: CodecTypes['pg/int4@1']['output'];
-      readonly unitId: CodecTypes['pg/text@1']['output'];
-      readonly unitNumber: CodecTypes['pg/int4@1']['output'];
-      readonly upc: CodecTypes['pg/text@1']['output'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly verificationLevel: CodecTypes['pg/text@1']['output'];
-    };
     readonly kernelEvent: {
       readonly actorId: CodecTypes['pg/int4@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -1135,38 +1039,6 @@ export type StorageColumnInputTypes = {
       readonly uploadedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly uploadedByActorId: CodecTypes['pg/int4@1']['input'] | null;
       readonly verificationStatus: CodecTypes['pg/text@1']['input'];
-    };
-    readonly inventoryUnit: {
-      readonly actualListPrice: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly aiConfidence: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly aiMetadata: CodecTypes['pg/text@1']['input'] | null;
-      readonly assignedCost: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly brand: CodecTypes['pg/text@1']['input'] | null;
-      readonly category: CodecTypes['pg/text@1']['input'] | null;
-      readonly condition: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly description: CodecTypes['pg/text@1']['input'] | null;
-      readonly disposition: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly manufacturer: CodecTypes['pg/text@1']['input'] | null;
-      readonly model: CodecTypes['pg/text@1']['input'] | null;
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly organizationId: CodecTypes['pg/int4@1']['input'];
-      readonly palletId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly processedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly processingStatus: CodecTypes['pg/text@1']['input'];
-      readonly serialNumber: CodecTypes['pg/text@1']['input'] | null;
-      readonly sku: CodecTypes['pg/text@1']['input'] | null;
-      readonly sourcePalletId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly suggestedPrice: CodecTypes['pg/numeric@1']['input'] | null;
-      readonly title: CodecTypes['pg/text@1']['input'] | null;
-      readonly truckloadId: CodecTypes['pg/int4@1']['input'];
-      readonly unitId: CodecTypes['pg/text@1']['input'];
-      readonly unitNumber: CodecTypes['pg/int4@1']['input'];
-      readonly upc: CodecTypes['pg/text@1']['input'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly verificationLevel: CodecTypes['pg/text@1']['input'];
     };
     readonly kernelEvent: {
       readonly actorId: CodecTypes['pg/int4@1']['input'] | null;
@@ -1520,39 +1392,6 @@ export namespace Models {
     truckload: public_Truckload;
     readonly [RelationKeys]?: 'truckload';
   };
-  export type public_InventoryUnit = {
-    id: CodecTypes['pg/int4@1']['output'];
-    unitId: CodecTypes['pg/text@1']['output'];
-    organizationId: CodecTypes['pg/int4@1']['output'];
-    truckloadId: CodecTypes['pg/int4@1']['output'];
-    palletId: CodecTypes['pg/int4@1']['output'] | null;
-    sourcePalletId: CodecTypes['pg/int4@1']['output'] | null;
-    unitNumber: CodecTypes['pg/int4@1']['output'];
-    upc: CodecTypes['pg/text@1']['output'] | null;
-    sku: CodecTypes['pg/text@1']['output'] | null;
-    manufacturer: CodecTypes['pg/text@1']['output'] | null;
-    brand: CodecTypes['pg/text@1']['output'] | null;
-    model: CodecTypes['pg/text@1']['output'] | null;
-    serialNumber: CodecTypes['pg/text@1']['output'] | null;
-    title: CodecTypes['pg/text@1']['output'] | null;
-    description: CodecTypes['pg/text@1']['output'] | null;
-    category: CodecTypes['pg/text@1']['output'] | null;
-    condition: CodecTypes['pg/text@1']['output'] | null;
-    verificationLevel: CodecTypes['pg/text@1']['output'];
-    disposition: CodecTypes['pg/text@1']['output'];
-    processingStatus: CodecTypes['pg/text@1']['output'];
-    assignedCost: CodecTypes['pg/numeric@1']['output'] | null;
-    suggestedPrice: CodecTypes['pg/numeric@1']['output'] | null;
-    actualListPrice: CodecTypes['pg/numeric@1']['output'] | null;
-    currency: CodecTypes['pg/text@1']['output'];
-    aiConfidence: CodecTypes['pg/numeric@1']['output'] | null;
-    aiMetadata: CodecTypes['pg/text@1']['output'] | null;
-    notes: CodecTypes['pg/text@1']['output'] | null;
-    processedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    readonly [RelationKeys]?: never;
-  };
   export type public_TruckReceiving = {
     id: CodecTypes['pg/int4@1']['output'];
     truckloadId: CodecTypes['pg/int4@1']['output'];
@@ -1681,7 +1520,6 @@ export declare const models: {
     KernelEvent: Models.public_KernelEvent;
     Truckload: Models.public_Truckload;
     Pallet: Models.public_Pallet;
-    InventoryUnit: Models.public_InventoryUnit;
     TruckReceiving: Models.public_TruckReceiving;
     UnloadingWorker: Models.public_UnloadingWorker;
     Sale: Models.public_Sale;
@@ -2235,249 +2073,6 @@ type ContractBase = Omit<
                   readonly name: 'evidenceAsset_supersededById_idx_08c11fe6';
                   readonly prefix: 'evidenceAsset_supersededById_idx';
                   readonly columns: readonly ['supersededById'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [];
-            };
-            readonly inventoryUnit: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: 'autoincrement()';
-                  };
-                };
-                readonly unitId: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly organizationId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly truckloadId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly palletId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly sourcePalletId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly unitNumber: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly upc: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly sku: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly manufacturer: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly brand: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly model: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly serialNumber: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly title: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly description: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly category: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly condition: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly verificationLevel: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'MANIFEST_ONLY'>;
-                  };
-                };
-                readonly disposition: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'SALE_READY'>;
-                  };
-                };
-                readonly processingStatus: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'PENDING'>;
-                  };
-                };
-                readonly assignedCost: {
-                  readonly nativeType: 'numeric';
-                  readonly codecId: 'pg/numeric@1';
-                  readonly nullable: true;
-                };
-                readonly suggestedPrice: {
-                  readonly nativeType: 'numeric';
-                  readonly codecId: 'pg/numeric@1';
-                  readonly nullable: true;
-                };
-                readonly actualListPrice: {
-                  readonly nativeType: 'numeric';
-                  readonly codecId: 'pg/numeric@1';
-                  readonly nullable: true;
-                };
-                readonly currency: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'USD'>;
-                  };
-                };
-                readonly aiConfidence: {
-                  readonly nativeType: 'numeric';
-                  readonly codecId: 'pg/numeric@1';
-                  readonly nullable: true;
-                };
-                readonly aiMetadata: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly notes: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly processedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [
-                { readonly columns: readonly ['unitId'] },
-                { readonly columns: readonly ['truckloadId', 'unitNumber'] },
-              ];
-              indexes: readonly [
-                {
-                  readonly name: 'inventoryUnit_organizationId_idx_2e17ef41';
-                  readonly prefix: 'inventoryUnit_organizationId_idx';
-                  readonly columns: readonly ['organizationId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_truckloadId_idx_6430a1ac';
-                  readonly prefix: 'inventoryUnit_truckloadId_idx';
-                  readonly columns: readonly ['truckloadId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_palletId_idx_36456697';
-                  readonly prefix: 'inventoryUnit_palletId_idx';
-                  readonly columns: readonly ['palletId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_sourcePalletId_idx_c9ee93b8';
-                  readonly prefix: 'inventoryUnit_sourcePalletId_idx';
-                  readonly columns: readonly ['sourcePalletId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_upc_idx_7a7047fd';
-                  readonly prefix: 'inventoryUnit_upc_idx';
-                  readonly columns: readonly ['upc'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_sku_idx_506e4b93';
-                  readonly prefix: 'inventoryUnit_sku_idx';
-                  readonly columns: readonly ['sku'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_serialNumber_idx_ba64041b';
-                  readonly prefix: 'inventoryUnit_serialNumber_idx';
-                  readonly columns: readonly ['serialNumber'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_verificationLevel_idx_dcf816bd';
-                  readonly prefix: 'inventoryUnit_verificationLevel_idx';
-                  readonly columns: readonly ['verificationLevel'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_disposition_idx_93b73388';
-                  readonly prefix: 'inventoryUnit_disposition_idx';
-                  readonly columns: readonly ['disposition'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_processingStatus_idx_6f216ba4';
-                  readonly prefix: 'inventoryUnit_processingStatus_idx';
-                  readonly columns: readonly ['processingStatus'];
                   readonly unique: false;
                 },
               ];
@@ -3834,10 +3429,6 @@ type ContractBase = Omit<
     };
     readonly truckload: { readonly namespace: 'public' & NamespaceId; readonly model: 'Truckload' };
     readonly pallet: { readonly namespace: 'public' & NamespaceId; readonly model: 'Pallet' };
-    readonly inventoryUnit: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'InventoryUnit';
-    };
     readonly truckReceiving: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'TruckReceiving';
@@ -4347,176 +3938,6 @@ type ContractBase = Omit<
                 readonly retentionPolicy: { readonly column: 'retentionPolicy' };
                 readonly supersededById: { readonly column: 'supersededById' };
                 readonly isActive: { readonly column: 'isActive' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly InventoryUnit: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly unitId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly organizationId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly truckloadId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly palletId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly sourcePalletId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly unitNumber: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly upc: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly sku: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly manufacturer: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly brand: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly model: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly serialNumber: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly title: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly description: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly category: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly condition: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly verificationLevel: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly disposition: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly processingStatus: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly assignedCost: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
-              };
-              readonly suggestedPrice: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
-              };
-              readonly actualListPrice: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
-              };
-              readonly currency: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly aiConfidence: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
-              };
-              readonly aiMetadata: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly notes: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly processedAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: Record<string, never>;
-            readonly storage: {
-              readonly table: 'inventoryUnit';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly unitId: { readonly column: 'unitId' };
-                readonly organizationId: { readonly column: 'organizationId' };
-                readonly truckloadId: { readonly column: 'truckloadId' };
-                readonly palletId: { readonly column: 'palletId' };
-                readonly sourcePalletId: { readonly column: 'sourcePalletId' };
-                readonly unitNumber: { readonly column: 'unitNumber' };
-                readonly upc: { readonly column: 'upc' };
-                readonly sku: { readonly column: 'sku' };
-                readonly manufacturer: { readonly column: 'manufacturer' };
-                readonly brand: { readonly column: 'brand' };
-                readonly model: { readonly column: 'model' };
-                readonly serialNumber: { readonly column: 'serialNumber' };
-                readonly title: { readonly column: 'title' };
-                readonly description: { readonly column: 'description' };
-                readonly category: { readonly column: 'category' };
-                readonly condition: { readonly column: 'condition' };
-                readonly verificationLevel: { readonly column: 'verificationLevel' };
-                readonly disposition: { readonly column: 'disposition' };
-                readonly processingStatus: { readonly column: 'processingStatus' };
-                readonly assignedCost: { readonly column: 'assignedCost' };
-                readonly suggestedPrice: { readonly column: 'suggestedPrice' };
-                readonly actualListPrice: { readonly column: 'actualListPrice' };
-                readonly currency: { readonly column: 'currency' };
-                readonly aiConfidence: { readonly column: 'aiConfidence' };
-                readonly aiMetadata: { readonly column: 'aiMetadata' };
-                readonly notes: { readonly column: 'notes' };
-                readonly processedAt: { readonly column: 'processedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -5869,15 +5290,6 @@ type ContractBase = Omit<
           readonly ref: {
             readonly namespace: 'public';
             readonly table: 'evidenceAsset';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'inventoryUnit';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };

@@ -55,6 +55,64 @@ async function createKernelEvent({
   });
 }
 
+
+async function ensureSourcePallets(truckload: {
+  id: number;
+  code: string;
+  pallets: number;
+}) {
+  const existingPallets =
+    await db.orm.public.Pallet
+      .where({
+        truckloadId: truckload.id,
+      })
+      .all();
+
+  const existingNumbers = new Set(
+    existingPallets.map(
+      (pallet) => pallet.palletNumber
+    )
+  );
+
+  let created = 0;
+
+  for (
+    let palletNumber = 1;
+    palletNumber <= truckload.pallets;
+    palletNumber += 1
+  ) {
+    if (existingNumbers.has(palletNumber)) {
+      continue;
+    }
+
+    const code =
+      `${truckload.code}-P${String(
+        palletNumber
+      ).padStart(2, "0")}`;
+
+    await db.orm.public.Pallet.create({
+      code,
+      truckloadId: truckload.id,
+      palletNumber,
+      status: "Pending",
+      palletType: "SOURCE",
+      processingMode: null,
+      verificationLevel: "MANIFEST_ONLY",
+      processingCompleted: false,
+      manifestReady: false,
+      processedPieces: 0,
+    });
+
+    created += 1;
+  }
+
+  return {
+    created,
+    expected: truckload.pallets,
+    total:
+      existingPallets.length + created,
+  };
+}
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -448,6 +506,9 @@ export async function POST(request: Request) {
     // =========================================================
 
     if (action === "start-unloading") {
+      const sourcePalletRegistration =
+        await ensureSourcePallets(truckload);
+
       const receiving =
         await db.orm.public.TruckReceiving
           .where({
@@ -633,6 +694,9 @@ export async function POST(request: Request) {
     // =========================================================
 
     if (action === "pallet-unloaded") {
+      const sourcePalletRegistration =
+        await ensureSourcePallets(truckload);
+
       const receiving =
         await db.orm.public.TruckReceiving
           .where({
@@ -1251,7 +1315,7 @@ export async function POST(request: Request) {
       {
         success: false,
         error:
-          "Receiving operation failed",
+          process.env.NODE_ENV === "development" && error instanceof Error ? `Receiving operation failed: ${error.message}` : "Receiving operation failed",
       },
       { status: 500 }
     );
