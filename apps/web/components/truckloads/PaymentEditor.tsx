@@ -1,7 +1,12 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 type PaymentEditorProps = {
   code: string;
@@ -13,6 +18,39 @@ type PaymentEditorProps = {
   initialPaymentCountry?: string | null;
 };
 
+type PaymentRecord = {
+  id: number;
+  obligationType: string;
+  amount: string;
+  currency: string;
+  method: string;
+  status: string;
+  payeeName: string | null;
+  reference: string | null;
+  notes: string | null;
+  paidAt: string;
+};
+
+type FinancialData = {
+  truckload: {
+    id: number;
+    code: string;
+    purchase: number;
+    estimatedFreight: number;
+    actualFreight: number | null;
+  };
+  payments: PaymentRecord[];
+  totals: {
+    merchandisePaid: number;
+    freightPaid: number;
+    operationalPaid: number;
+    confirmedTotal: number;
+    supplierBalance: number;
+    freightBalance: number;
+    merchandisePaymentStatus: string;
+  };
+};
+
 const PAYMENT_METHODS = [
   "Unspecified",
   "Cash",
@@ -22,269 +60,44 @@ const PAYMENT_METHODS = [
   "30-Day Credit",
 ];
 
-const PAYMENT_STATUSES = [
-  "Unpaid",
-  "Partial",
-  "Paid in Full",
-];
-
-const COUNTRIES = [
-  "United States",
-  "Mexico",
-  "Argentina",
-  "Belize",
-  "Bolivia",
-  "Brazil",
-  "Canada",
-  "Chile",
-  "Colombia",
-  "Costa Rica",
-  "Cuba",
-  "Dominican Republic",
-  "Ecuador",
-  "El Salvador",
-  "Guatemala",
-  "Guyana",
-  "Haiti",
-  "Honduras",
-  "Jamaica",
-  "Nicaragua",
-  "Panama",
-  "Paraguay",
-  "Peru",
-  "Puerto Rico",
-  "Spain",
-  "Suriname",
-  "Trinidad and Tobago",
-  "Uruguay",
-  "Venezuela",
-  "Afghanistan",
-  "Albania",
-  "Algeria",
-  "Andorra",
-  "Angola",
-  "Antigua and Barbuda",
-  "Armenia",
-  "Australia",
-  "Austria",
-  "Azerbaijan",
-  "Bahamas",
-  "Bahrain",
-  "Bangladesh",
-  "Barbados",
-  "Belarus",
-  "Belgium",
-  "Benin",
-  "Bhutan",
-  "Bosnia and Herzegovina",
-  "Botswana",
-  "Brunei",
-  "Bulgaria",
-  "Burkina Faso",
-  "Burundi",
-  "Cabo Verde",
-  "Cambodia",
-  "Cameroon",
-  "Central African Republic",
-  "Chad",
-  "China",
-  "Comoros",
-  "Democratic Republic of the Congo",
-  "Republic of the Congo",
-  "Croatia",
-  "Cyprus",
-  "Czech Republic",
-  "Denmark",
-  "Djibouti",
-  "Dominica",
-  "Egypt",
-  "Equatorial Guinea",
-  "Eritrea",
-  "Estonia",
-  "Eswatini",
-  "Ethiopia",
-  "Fiji",
-  "Finland",
-  "France",
-  "Gabon",
-  "Gambia",
-  "Georgia",
-  "Germany",
-  "Ghana",
-  "Greece",
-  "Grenada",
-  "Guinea",
-  "Guinea-Bissau",
-  "Hungary",
-  "Iceland",
-  "India",
-  "Indonesia",
-  "Iraq",
-  "Ireland",
-  "Israel",
-  "Italy",
-  "Ivory Coast",
-  "Japan",
-  "Jordan",
-  "Kazakhstan",
-  "Kenya",
-  "Kiribati",
-  "Kuwait",
-  "Kyrgyzstan",
-  "Laos",
-  "Latvia",
-  "Lebanon",
-  "Lesotho",
-  "Liberia",
-  "Libya",
-  "Liechtenstein",
-  "Lithuania",
-  "Luxembourg",
-  "Madagascar",
-  "Malawi",
-  "Malaysia",
-  "Maldives",
-  "Mali",
-  "Malta",
-  "Marshall Islands",
-  "Mauritania",
-  "Mauritius",
-  "Micronesia",
-  "Moldova",
-  "Monaco",
-  "Mongolia",
-  "Montenegro",
-  "Morocco",
-  "Mozambique",
-  "Myanmar",
-  "Namibia",
-  "Nauru",
-  "Nepal",
-  "Netherlands",
-  "New Zealand",
-  "Niger",
-  "Nigeria",
-  "North Macedonia",
-  "Norway",
-  "Oman",
-  "Pakistan",
-  "Palau",
-  "Papua New Guinea",
-  "Philippines",
-  "Poland",
-  "Portugal",
-  "Qatar",
-  "Romania",
-  "Rwanda",
-  "Saint Kitts and Nevis",
-  "Saint Lucia",
-  "Saint Vincent and the Grenadines",
-  "Samoa",
-  "San Marino",
-  "Sao Tome and Principe",
-  "Saudi Arabia",
-  "Senegal",
-  "Serbia",
-  "Seychelles",
-  "Sierra Leone",
-  "Singapore",
-  "Slovakia",
-  "Slovenia",
-  "Solomon Islands",
-  "Somalia",
-  "South Africa",
-  "South Korea",
-  "South Sudan",
-  "Sri Lanka",
-  "Sudan",
-  "Sweden",
-  "Switzerland",
-  "Taiwan",
-  "Tajikistan",
-  "Tanzania",
-  "Thailand",
-  "Timor-Leste",
-  "Togo",
-  "Tonga",
-  "Tunisia",
-  "Turkey",
-  "Turkmenistan",
-  "Tuvalu",
-  "Uganda",
-  "Ukraine",
-  "United Arab Emirates",
-  "United Kingdom",
-  "Uzbekistan",
-  "Vanuatu",
-  "Vatican City",
-  "Vietnam",
-  "Yemen",
-  "Zambia",
-  "Zimbabwe",
-];
-
-type SavedPaymentSnapshot = {
-  paymentMethod: string;
-  paymentStatus: string;
-  amountPaid: number;
-  paymentDueDate: string;
-  paymentCountry: string;
-};
+const OBLIGATION_TYPES = [
+  ["MERCHANDISE", "Merchandise / Supplier"],
+  ["FREIGHT", "Freight"],
+  ["CUSTOMS", "Customs"],
+  ["BROKER", "Broker"],
+  ["FORKLIFT", "Forklift"],
+  ["LABOR", "Labor"],
+  ["FUEL", "Fuel"],
+  ["TOLLS", "Tolls"],
+  ["OTHER", "Other"],
+] as const;
 
 export default function PaymentEditor({
   code,
   purchase,
-  initialPaymentMethod,
-  initialPaymentStatus,
-  initialAmountPaid,
-  initialPaymentDueDate,
-  initialPaymentCountry = null,
 }: PaymentEditorProps) {
-  const router = useRouter();
+  const [data, setData] =
+    useState<FinancialData | null>(null);
 
-  const initialDueDate = initialPaymentDueDate
-    ? initialPaymentDueDate.slice(0, 10)
-    : "";
-
-  const initialCountry = initialPaymentCountry ?? "";
-
-  const [paymentMethod, setPaymentMethod] = useState(
-    initialPaymentMethod
-  );
-
-  const [paymentStatus, setPaymentStatus] = useState(
-    initialPaymentStatus
-  );
-
-  const [amountPaid, setAmountPaid] = useState(
-    String(initialAmountPaid)
-  );
-
-  const [paymentDueDate, setPaymentDueDate] = useState(
-    initialDueDate
-  );
-
-  const [paymentCountry, setPaymentCountry] = useState(
-    initialCountry
-  );
-
-  const [savedSnapshot, setSavedSnapshot] =
-    useState<SavedPaymentSnapshot>({
-      paymentMethod: initialPaymentMethod,
-      paymentStatus: initialPaymentStatus,
-      amountPaid: initialAmountPaid,
-      paymentDueDate: initialDueDate,
-      paymentCountry: initialCountry,
-    });
-
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const numericAmountPaid = Number(amountPaid) || 0;
+  const [obligationType, setObligationType] =
+    useState("MERCHANDISE");
 
-  const balanceDue = useMemo(() => {
-    return Math.max(purchase - numericAmountPaid, 0);
-  }, [purchase, numericAmountPaid]);
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] =
+    useState("Unspecified");
+
+  const [payeeName, setPayeeName] =
+    useState("");
+
+  const [reference, setReference] =
+    useState("");
+
+  const [notes, setNotes] = useState("");
 
   const money = useMemo(
     () =>
@@ -295,287 +108,601 @@ export default function PaymentEditor({
     []
   );
 
-  const hasChanges = useMemo(() => {
-    return (
-      paymentMethod !== savedSnapshot.paymentMethod ||
-      paymentStatus !== savedSnapshot.paymentStatus ||
-      numericAmountPaid !== savedSnapshot.amountPaid ||
-      paymentDueDate !== savedSnapshot.paymentDueDate ||
-      paymentCountry !== savedSnapshot.paymentCountry
-    );
-  }, [
-    paymentMethod,
-    paymentStatus,
-    numericAmountPaid,
-    paymentDueDate,
-    paymentCountry,
-    savedSnapshot,
-  ]);
+  const loadFinancials = useCallback(
+    async () => {
+      setLoading(true);
+      setError("");
 
-  async function handleSubmit(
+      try {
+        const response = await fetch(
+          `/api/truckload-payments?code=${encodeURIComponent(
+            code
+          )}`,
+          {
+            cache: "no-store",
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.error ||
+              "Failed to load financial data"
+          );
+        }
+
+        setData(result);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load financial data"
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [code]
+  );
+
+  useEffect(() => {
+    void loadFinancials();
+  }, [loadFinancials]);
+
+  async function handlePayment(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    if (!hasChanges || saving) {
+    if (saving) {
+      return;
+    }
+
+    const numericAmount = Number(amount);
+
+    if (
+      !Number.isFinite(numericAmount) ||
+      numericAmount <= 0
+    ) {
+      setError(
+        "Payment amount must be greater than zero."
+      );
       return;
     }
 
     setSaving(true);
     setError("");
+    setSuccess("");
 
     try {
-      const response = await fetch("/api/truckloads", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code,
-          paymentMethod,
-          paymentStatus,
-          amountPaid: numericAmountPaid,
-          paymentDueDate: paymentDueDate || null,
-          paymentCountry: paymentCountry || null,
-        }),
-      });
+      const response = await fetch(
+        "/api/truckload-payments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code,
+            obligationType,
+            amount: numericAmount,
+            currency: "USD",
+            method,
+            status: "CONFIRMED",
+            payeeName: payeeName || null,
+            reference: reference || null,
+            notes: notes || null,
+          }),
+        }
+      );
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Failed to update payment"
+          result.error || "Failed to record payment"
         );
       }
 
-      setSavedSnapshot({
-        paymentMethod,
-        paymentStatus,
-        amountPaid: numericAmountPaid,
-        paymentDueDate,
-        paymentCountry,
-      });
+      setAmount("");
+      setReference("");
+      setNotes("");
+      setSuccess(
+        "Confirmed payment recorded in the procurement ledger."
+      );
 
-      router.refresh();
+      await loadFinancials();
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to update payment"
+          : "Failed to record payment"
       );
     } finally {
       setSaving(false);
     }
   }
 
+  const actualFreight =
+    data?.truckload.actualFreight ?? null;
+
+  const freightBasis =
+    actualFreight ??
+    data?.truckload.estimatedFreight ??
+    0;
+
+  const merchandisePaid =
+    data?.totals.merchandisePaid ?? 0;
+
+  const supplierBalance =
+    data?.totals.supplierBalance ??
+    Math.max(purchase - merchandisePaid, 0);
+
+  const freightPaid =
+    data?.totals.freightPaid ?? 0;
+
+  const freightBalance =
+    data?.totals.freightBalance ??
+    Math.max(freightBasis - freightPaid, 0);
+
+  const operationalPaid =
+    data?.totals.operationalPaid ?? 0;
+
+  const currentLandedCost =
+    purchase +
+    freightBasis +
+    operationalPaid;
+
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-xl font-semibold">
-              Purchase & Payment
+              Procurement & Financials
             </h2>
 
-            {!hasChanges && !error && (
+            {data && (
               <span className="rounded-full border border-emerald-800 bg-emerald-950/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                Saved
-              </span>
-            )}
-
-            {hasChanges && !error && (
-              <span className="rounded-full border border-amber-800 bg-amber-950/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-400">
-                Unsaved Changes
+                Ledger Active
               </span>
             )}
           </div>
 
-          <p className="mt-1 text-sm text-slate-400">
-            Track purchase terms, international payments and
-            outstanding balance.
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+            Merchandise, freight and operating payments
+            are recorded as permanent ledger entries.
+            Payment status is calculated from confirmed
+            money instead of being entered manually.
           </p>
         </div>
 
         <div className="rounded-xl border border-slate-700 bg-slate-950/60 px-5 py-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Balance Due
+            Current Landed Cost
           </p>
 
           <p className="mt-1 text-xl font-bold">
-            {money.format(balanceDue)}
+            {money.format(currentLandedCost)}
           </p>
         </div>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-5"
-      >
-        <label>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Payment Method
-          </span>
+      {loading && (
+        <p className="mt-6 text-sm text-slate-400">
+          Loading financial ledger...
+        </p>
+      )}
 
-          <select
-            value={paymentMethod}
-            onChange={(event) =>
-              setPaymentMethod(event.target.value)
-            }
-            className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+      {!loading && data && (
+        <>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Purchase Cost
+              </p>
+
+              <p className="mt-2 text-xl font-semibold">
+                {money.format(
+                  data.truckload.purchase
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Supplier Paid
+              </p>
+
+              <p className="mt-2 text-xl font-semibold">
+                {money.format(merchandisePaid)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Supplier Balance
+              </p>
+
+              <p className="mt-2 text-xl font-semibold">
+                {money.format(supplierBalance)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Merchandise Status
+              </p>
+
+              <p className="mt-2 text-xl font-semibold">
+                {
+                  data.totals
+                    .merchandisePaymentStatus
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Estimated Freight
+              </p>
+
+              <p className="mt-2 text-lg font-semibold">
+                {money.format(
+                  data.truckload.estimatedFreight
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Actual Freight
+              </p>
+
+              <p className="mt-2 text-lg font-semibold">
+                {actualFreight === null
+                  ? "Not confirmed"
+                  : money.format(actualFreight)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Freight Paid
+              </p>
+
+              <p className="mt-2 text-lg font-semibold">
+                {money.format(freightPaid)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Freight Balance
+              </p>
+
+              <p className="mt-2 text-lg font-semibold">
+                {money.format(freightBalance)}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Operational Costs Paid
+              </p>
+
+              <p className="mt-2 text-lg font-semibold">
+                {money.format(operationalPaid)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Confirmed Cash Out
+              </p>
+
+              <p className="mt-2 text-lg font-semibold">
+                {money.format(
+                  data.totals.confirmedTotal
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Freight Basis
+              </p>
+
+              <p className="mt-2 text-lg font-semibold">
+                {actualFreight === null
+                  ? "Estimated"
+                  : "Actual"}
+              </p>
+            </div>
+          </div>
+
+          <form
+            onSubmit={handlePayment}
+            className="mt-8 rounded-2xl border border-slate-800 bg-slate-950/40 p-5"
           >
-            {PAYMENT_METHODS.map((method) => (
-              <option key={method} value={method}>
-                {method}
-              </option>
-            ))}
-          </select>
-        </label>
+            <div>
+              <h3 className="font-semibold">
+                Record Confirmed Payment
+              </h3>
 
-        <label>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Payment Country
-          </span>
+              <p className="mt-1 text-sm text-slate-400">
+                This creates a permanent procurement
+                ledger entry. It does not manually edit
+                Paid in Full.
+              </p>
+            </div>
 
-          <select
-            value={paymentCountry}
-            onChange={(event) =>
-              setPaymentCountry(event.target.value)
-            }
-            className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-          >
-            <option value="">Select country</option>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <label>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Payment For
+                </span>
 
-            {COUNTRIES.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
-        </label>
+                <select
+                  value={obligationType}
+                  onChange={(event) =>
+                    setObligationType(
+                      event.target.value
+                    )
+                  }
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                >
+                  {OBLIGATION_TYPES.map(
+                    ([value, label]) => (
+                      <option
+                        key={value}
+                        value={value}
+                      >
+                        {label}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
 
-        <label>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Payment Status
-          </span>
+              <label>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Amount
+                </span>
 
-          <select
-            value={paymentStatus}
-            onChange={(event) =>
-              setPaymentStatus(event.target.value)
-            }
-            className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-          >
-            {PAYMENT_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </label>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={amount}
+                  onChange={(event) =>
+                    setAmount(event.target.value)
+                  }
+                  placeholder="0.00"
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                />
+              </label>
 
-        <label>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Amount Paid
-          </span>
+              <label>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Method
+                </span>
 
-          <input
-            type="number"
-            min="0"
-            max={purchase}
-            step="0.01"
-            value={amountPaid}
-            onChange={(event) =>
-              setAmountPaid(event.target.value)
-            }
-            className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-          />
-        </label>
+                <select
+                  value={method}
+                  onChange={(event) =>
+                    setMethod(event.target.value)
+                  }
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                >
+                  {PAYMENT_METHODS.map(
+                    (paymentMethod) => (
+                      <option
+                        key={paymentMethod}
+                        value={paymentMethod}
+                      >
+                        {paymentMethod}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
 
-        <label>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Due Date
-          </span>
+              <label>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Payee
+                </span>
 
-          <input
-            type="date"
-            value={paymentDueDate}
-            onChange={(event) =>
-              setPaymentDueDate(event.target.value)
-            }
-            className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
-          />
-        </label>
+                <input
+                  type="text"
+                  value={payeeName}
+                  onChange={(event) =>
+                    setPayeeName(
+                      event.target.value
+                    )
+                  }
+                  placeholder="Supplier or carrier"
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                />
+              </label>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500">
-            Purchase Price
-          </p>
+              <label>
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Reference
+                </span>
 
-          <p className="mt-2 text-lg font-semibold">
-            {money.format(purchase)}
-          </p>
-        </div>
+                <input
+                  type="text"
+                  value={reference}
+                  onChange={(event) =>
+                    setReference(
+                      event.target.value
+                    )
+                  }
+                  placeholder="Wire, invoice, check..."
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                />
+              </label>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500">
-            Paid
-          </p>
+              <label className="md:col-span-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Notes
+                </span>
 
-          <p className="mt-2 text-lg font-semibold">
-            {money.format(numericAmountPaid)}
-          </p>
-        </div>
+                <input
+                  type="text"
+                  value={notes}
+                  onChange={(event) =>
+                    setNotes(event.target.value)
+                  }
+                  placeholder="Optional payment notes"
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                />
+              </label>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500">
-            Outstanding
-          </p>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={
+                    saving ||
+                    !amount ||
+                    Number(amount) <= 0
+                  }
+                  className="w-full rounded-xl bg-white px-5 py-3 font-bold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {saving
+                    ? "Recording..."
+                    : "Record Payment"}
+                </button>
+              </div>
+            </div>
+          </form>
 
-          <p className="mt-2 text-lg font-semibold">
-            {money.format(balanceDue)}
-          </p>
-        </div>
+          <div className="mt-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold">
+                  Payment History
+                </h3>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-500">
-            Country
-          </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  Permanent procurement ledger for this
+                  truckload.
+                </p>
+              </div>
 
-          <p className="mt-2 text-lg font-semibold">
-            {paymentCountry || "Not selected"}
-          </p>
-        </div>
+              <span className="text-sm text-slate-400">
+                {data.payments.length} record
+                {data.payments.length === 1
+                  ? ""
+                  : "s"}
+              </span>
+            </div>
 
-        <div className="flex items-end">
-          <button
-            type="submit"
-            disabled={saving || !hasChanges}
-            className="w-full rounded-xl bg-white px-5 py-3 font-bold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {saving
-              ? "Saving..."
-              : hasChanges
-                ? "Save Payment"
-                : "Payment Saved"}
-          </button>
-        </div>
-      </form>
+            {data.payments.length === 0 ? (
+              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/40 p-5 text-sm text-slate-400">
+                No procurement payments recorded.
+              </div>
+            ) : (
+              <div className="mt-4 overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full min-w-[850px] text-left text-sm">
+                  <thead className="bg-slate-950/80 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3">
+                        Date
+                      </th>
+                      <th className="px-4 py-3">
+                        Type
+                      </th>
+                      <th className="px-4 py-3">
+                        Payee
+                      </th>
+                      <th className="px-4 py-3">
+                        Method
+                      </th>
+                      <th className="px-4 py-3">
+                        Reference
+                      </th>
+                      <th className="px-4 py-3">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {data.payments.map(
+                      (payment) => (
+                        <tr
+                          key={payment.id}
+                          className="border-t border-slate-800"
+                        >
+                          <td className="px-4 py-3 text-slate-300">
+                            {new Date(
+                              payment.paidAt
+                            ).toLocaleDateString()}
+                          </td>
+
+                          <td className="px-4 py-3 font-medium">
+                            {
+                              payment.obligationType
+                            }
+                          </td>
+
+                          <td className="px-4 py-3 text-slate-300">
+                            {payment.payeeName ||
+                              "—"}
+                          </td>
+
+                          <td className="px-4 py-3 text-slate-300">
+                            {payment.method}
+                          </td>
+
+                          <td className="px-4 py-3 text-slate-300">
+                            {payment.reference ||
+                              "—"}
+                          </td>
+
+                          <td className="px-4 py-3">
+                            <span className="rounded-full border border-emerald-800 bg-emerald-950/40 px-2 py-1 text-xs font-semibold text-emerald-400">
+                              {payment.status}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3 text-right font-semibold">
+                            {money.format(
+                              Number(
+                                payment.amount
+                              )
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {error && (
-        <p className="mt-4 text-sm font-medium text-red-400">
+        <p className="mt-5 rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm font-medium text-red-400">
           {error}
         </p>
       )}
 
-      {!error && !hasChanges && (
-        <p className="mt-4 text-sm font-medium text-emerald-400">
-          Payment information is saved.
-        </p>
-      )}
-
-      {!error && hasChanges && (
-        <p className="mt-4 text-sm font-medium text-amber-400">
-          You have payment changes that have not been saved.
+      {success && !error && (
+        <p className="mt-5 rounded-xl border border-emerald-900 bg-emerald-950/30 p-4 text-sm font-medium text-emerald-400">
+          {success}
         </p>
       )}
     </section>

@@ -84,6 +84,7 @@ model Organization {
   memberships OrganizationMembership[]
   events      KernelEvent[]
   truckloads  Truckload[]
+  suppliers   Supplier[]
   sales       Sale[]
 
   createdAt TimestamptzString @default(now())
@@ -436,6 +437,53 @@ model KernelEvent {
 }
 
 // ============================================================
+// LDC — SUPPLIER / PROCUREMENT V2A
+// ============================================================
+//
+// Reusable supplier master record.
+// Truckload.supplier remains as a legacy/historical name snapshot
+// while supplierId provides the permanent relationship.
+//
+// ============================================================
+
+model Supplier {
+  id             Int @id @default(autoincrement())
+  organizationId Int
+
+  name        String
+  legalName   String?
+  contactName String?
+  email       String?
+  phone       String?
+
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  stateRegion  String?
+  postalCode   String?
+  country      String?
+
+  paymentInstructions String?
+  notes               String?
+
+  isActive Boolean @default(true)
+
+  organization Organization @relation(
+    fields: [organizationId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  truckloads Truckload[]
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([isActive])
+}
+// ============================================================
 // LDC — TRUCKLOAD
 //
 // Operational lifecycle:
@@ -466,6 +514,7 @@ model Truckload {
 
   organizationId Int?
   locationId     Int?
+  supplierId     Int?
 
   supplier    String
   retailer    String
@@ -498,14 +547,78 @@ model Truckload {
     onDelete: SetNull
   )
 
+  supplierRecord Supplier? @relation(
+    fields: [supplierId],
+    references: [id],
+    onDelete: SetNull
+  )
+
   palletRecords Pallet[]
   receiving     TruckReceiving?
+  procurementPayments TruckloadPayment[]
   sales         Sale[]
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
 }
 
+// ============================================================
+// LDC — TRUCKLOAD PAYMENT / PROCUREMENT V2A
+// ============================================================
+//
+// Permanent procurement-side payment history.
+//
+// obligationType examples:
+// MERCHANDISE
+// FREIGHT
+// CUSTOMS
+// BROKER
+// FORKLIFT
+// LABOR
+// FUEL
+// TOLLS
+// OTHER
+//
+// status:
+// PENDING
+// CONFIRMED
+// VOID
+//
+// Only CONFIRMED payments count toward financial balances.
+// Historical payments are preserved instead of overwriting totals.
+//
+// ============================================================
+
+model TruckloadPayment {
+  id          Int @id @default(autoincrement())
+  truckloadId Int
+
+  obligationType String
+  amount         Decimal
+  currency       String @default("USD")
+  method         String @default("Unspecified")
+  status         String @default("CONFIRMED")
+
+  payeeName String?
+  reference String?
+  notes     String?
+
+  paidAt TimestamptzString @default(now())
+
+  truckload Truckload @relation(
+    fields: [truckloadId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@index([truckloadId])
+  @@index([obligationType])
+  @@index([status])
+  @@index([paidAt])
+}
 // ============================================================
 // LDC — PALLET
 // ============================================================
