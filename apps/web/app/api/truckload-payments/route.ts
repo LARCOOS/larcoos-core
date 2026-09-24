@@ -476,3 +476,144 @@ export async function POST(request: Request) {
     );
   }
 }
+export async function PATCH(request: Request) {
+  try {
+    const { organization } = await authorizeLdc();
+    const body = await request.json();
+
+    const code = String(body.code ?? "").trim();
+    const paymentId = Number(body.paymentId);
+    const reason = String(body.reason ?? "").trim();
+
+    if (!code) {
+      return NextResponse.json(
+        { error: "Truckload code is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isInteger(paymentId) || paymentId <= 0) {
+      return NextResponse.json(
+        { error: "Valid payment ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (reason.length < 3) {
+      return NextResponse.json(
+        { error: "Void reason is required" },
+        { status: 400 }
+      );
+    }
+
+    const truckload = await db.orm.public.Truckload
+      .where({
+        code,
+        organizationId: organization.id,
+      })
+      .first();
+
+    if (!truckload) {
+      return NextResponse.json(
+        { error: "Truckload not found inside LDC" },
+        { status: 404 }
+      );
+    }
+
+    const payment = await db.orm.public.TruckloadPayment
+      .where({
+        id: paymentId,
+        truckloadId: truckload.id,
+      })
+      .first();
+
+    if (!payment) {
+      return NextResponse.json(
+        { error: "Payment not found for this truckload" },
+        { status: 404 }
+      );
+    }
+
+    if (payment.status === "VOID") {
+      return NextResponse.json(
+        { error: "Payment is already void" },
+        { status: 409 }
+      );
+    }
+
+    const previousNotes = String(payment.notes ?? "").trim();
+    const voidAuditNote =
+      `VOID: ${reason}` +
+      (previousNotes ? ` | Original notes: ${previousNotes}` : "");
+
+    const voidedPayment = await db.orm.public.TruckloadPayment
+      .where({
+        id: payment.id,
+        truckloadId: truckload.id,
+      })
+      .update({
+        status: "VOID",
+        notes: voidAuditNote,
+      });
+
+    if (!voidedPayment) {
+      throw new Error("Payment could not be voided");
+    }
+
+    const purchase = Number(truckload.purchase);
+    const totals = await getConfirmedTotals(truckload.id);
+
+    const paymentStatus = deriveMerchandisePaymentStatus(
+      purchase,
+      totals.merchandisePaid
+    );
+
+    await db.orm.public.Truckload
+      .where({
+        id: truckload.id,
+        organizationId: organization.id,
+      })
+      .update({
+        amountPaid: String(totals.merchandisePaid),
+        paymentStatus,
+      });
+
+    const receiving = await db.orm.public.TruckReceiving
+      .where({
+        truckloadId: truckload.id,
+      })
+      .first();
+
+    const estimatedFreight = Number(truckload.freight);
+
+    const actualFreight =
+      receiving?.freightCost === null ||
+      receiving?.freightCost === undefined
+        ? null
+        : Number(receiving.freightCost);
+
+    const freightObligation =
+      actualFreight ?? estimatedFreight;
+
+    return NextResponse.json({
+      payment: voidedPayment,
+      totals: {
+        ...totals,
+        supplierBalance: Math.max(
+          purchase - totals.merchandisePaid,
+          0
+        ),
+        freightBalance: Math.max(
+          freightObligation - totals.freightPaid,
+          0
+        ),
+        merchandisePaymentStatus: paymentStatus,
+      },
+    });
+  } catch (error) {
+    return errorResponse(
+      error,
+      "PATCH /api/truckload-payments"
+    );
+  }
+}

@@ -98,6 +98,8 @@ export default function PaymentEditor({
     useState("");
 
   const [notes, setNotes] = useState("");
+  const [voidingPaymentId, setVoidingPaymentId] =
+    useState<number | null>(null);
 
   const money = useMemo(
     () =>
@@ -224,6 +226,83 @@ export default function PaymentEditor({
     }
   }
 
+  async function handleVoidPayment(
+    payment: PaymentRecord
+  ) {
+    if (voidingPaymentId !== null || payment.status === "VOID") {
+      return;
+    }
+
+    const reason = window.prompt(
+      `Reason for voiding payment #${payment.id}:`
+    );
+
+    if (reason === null) {
+      return;
+    }
+
+    const cleanReason = reason.trim();
+
+    if (cleanReason.length < 3) {
+      setError(
+        "Void reason must contain at least 3 characters."
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Void payment #${payment.id} for ${money.format(
+        Number(payment.amount)
+      )}?\n\nThis will preserve the record in Payment History and exclude it from confirmed totals.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setVoidingPaymentId(payment.id);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        "/api/truckload-payments",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code,
+            paymentId: payment.id,
+            reason: cleanReason,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Failed to void payment"
+        );
+      }
+
+      setSuccess(
+        `Payment #${payment.id} was voided. The ledger record was preserved.`
+      );
+
+      await loadFinancials();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to void payment"
+      );
+    } finally {
+      setVoidingPaymentId(null);
+    }
+  }
   const actualFreight =
     data?.truckload.actualFreight ?? null;
 
@@ -634,6 +713,9 @@ export default function PaymentEditor({
                       <th className="px-4 py-3 text-right">
                         Amount
                       </th>
+                      <th className="px-4 py-3 text-right">
+                        Action
+                      </th>
                     </tr>
                   </thead>
 
@@ -671,7 +753,15 @@ export default function PaymentEditor({
                           </td>
 
                           <td className="px-4 py-3">
-                            <span className="rounded-full border border-emerald-800 bg-emerald-950/40 px-2 py-1 text-xs font-semibold text-emerald-400">
+                            <span
+                              className={
+                                payment.status === "VOID"
+                                  ? "rounded-full border border-red-800 bg-red-950/40 px-2 py-1 text-xs font-semibold text-red-400"
+                                  : payment.status === "PENDING"
+                                    ? "rounded-full border border-amber-800 bg-amber-950/40 px-2 py-1 text-xs font-semibold text-amber-400"
+                                    : "rounded-full border border-emerald-800 bg-emerald-950/40 px-2 py-1 text-xs font-semibold text-emerald-400"
+                              }
+                            >
                               {payment.status}
                             </span>
                           </td>
@@ -681,6 +771,27 @@ export default function PaymentEditor({
                               Number(
                                 payment.amount
                               )
+                            )}
+                          </td>
+
+                          <td className="px-4 py-3 text-right">
+                            {payment.status === "VOID" ? (
+                              <span className="text-xs font-medium text-slate-500">
+                                Preserved
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={voidingPaymentId !== null}
+                                onClick={() =>
+                                  void handleVoidPayment(payment)
+                                }
+                                className="rounded-lg border border-red-900 px-3 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-950/40 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                {voidingPaymentId === payment.id
+                                  ? "Voiding..."
+                                  : "VOID"}
+                              </button>
                             )}
                           </td>
                         </tr>
