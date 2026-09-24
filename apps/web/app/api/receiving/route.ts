@@ -794,19 +794,11 @@ export async function POST(request: Request) {
         );
       }
 
-      const pallets =
-        await db.orm.public.Pallet
-          .where({
-            truckloadId:
-              truckload.id,
-          })
-          .all();
-
       const unloadedCount =
-        pallets.filter(
-          (record) =>
-            record.status === "Unloaded"
-        ).length;
+        Math.min(
+          Number(receiving.palletsUnloaded ?? 0) + 1,
+          truckload.pallets
+        );
 
       const updatedReceiving =
         await db.orm.public.TruckReceiving
@@ -892,22 +884,11 @@ export async function POST(request: Request) {
         );
       }
 
-      const pallets =
-        await db.orm.public.Pallet
-          .where({
-            truckloadId:
-              truckload.id,
-          })
-          .all();
-
-      const unloadedPallets =
-        pallets.filter(
-          (pallet) =>
-            pallet.status === "Unloaded"
-        );
+      const unloadedCount =
+        Number(receiving.palletsUnloaded ?? 0);
 
       if (
-        unloadedPallets.length !==
+        unloadedCount !==
         truckload.pallets
       ) {
         return NextResponse.json(
@@ -921,11 +902,11 @@ export async function POST(request: Request) {
               truckload.pallets,
 
             palletsUnloaded:
-              unloadedPallets.length,
+              unloadedCount,
 
             remaining:
               truckload.pallets -
-              unloadedPallets.length,
+              unloadedCount,
           },
           { status: 409 }
         );
@@ -960,7 +941,7 @@ export async function POST(request: Request) {
             unloadingSeconds,
 
             palletsUnloaded:
-              unloadedPallets.length,
+              unloadedCount,
           });
 
       if (!updatedReceiving) {
@@ -1016,14 +997,14 @@ export async function POST(request: Request) {
 
       const palletsPerHour =
         unloadingSeconds > 0
-          ? unloadedPallets.length /
+          ? unloadedCount /
             (unloadingSeconds / 3600)
           : null;
 
       const minutesPerPallet =
-        unloadedPallets.length > 0
+        unloadedCount > 0
           ? unloadingMinutes /
-            unloadedPallets.length
+            unloadedCount
           : null;
 
       await createKernelEvent({
@@ -1043,7 +1024,7 @@ export async function POST(request: Request) {
           unloadingMinutes,
 
           palletsUnloaded:
-            unloadedPallets.length,
+            unloadedCount,
 
           palletsExpected:
             truckload.pallets,
@@ -1076,7 +1057,7 @@ export async function POST(request: Request) {
             ),
 
           palletsUnloaded:
-            unloadedPallets.length,
+            unloadedCount,
 
           palletsPerHour:
             palletsPerHour === null

@@ -4,6 +4,7 @@ import { db } from "@/src/prisma/db";
 
 import PaymentEditor from "@/components/truckloads/PaymentEditor";
 import ReceivingPanel from "@/components/truckloads/ReceivingPanel";
+import ProcessingPanel from "@/components/truckloads/ProcessingPanel";
 import PalletGrid from "@/components/truckloads/PalletGrid";
 
 type TruckloadDetailPageProps = {
@@ -169,6 +170,12 @@ export default async function TruckloadDetailPage({
           <ReceivingPanel
             truckloadCode={truckload.code}
           />
+        </div>
+
+        {/* PROCESSING */}
+
+        <div className="mt-6">
+          <ProcessingPanel truckloadCode={truckload.code} />
         </div>
 
         {/* OPERATIONS */}
