@@ -18,6 +18,29 @@ type ApiTruckload = {
   updatedAt: string;
 };
 
+type Supplier = {
+  id: number;
+  name: string;
+  legalName: string | null;
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  stateRegion: string | null;
+  postalCode: string | null;
+  country: string | null;
+  paymentInstructions: string | null;
+  notes: string | null;
+  isActive: boolean;
+};
+
+type SuppliersResponse = {
+  success: boolean;
+  suppliers: Supplier[];
+};
+
 type Truckload = {
   id: number;
   code: string;
@@ -125,6 +148,15 @@ export default function TruckloadsPage() {
   const [sales, setSales] =
     useState<Sale[]>([]);
 
+  const [suppliers, setSuppliers] =
+    useState<Supplier[]>([]);
+
+  const [supplierId, setSupplierId] =
+    useState("");
+
+  const [supplierMode, setSupplierMode] =
+    useState<"existing" | "new">("existing");
+
   const [loading, setLoading] =
     useState(true);
 
@@ -163,15 +195,21 @@ export default function TruckloadsPage() {
       setLoading(true);
       setError("");
 
-      const [truckloadsResponse, salesResponse] =
-        await Promise.all([
-          fetch("/api/truckloads", {
-            cache: "no-store",
-          }),
-          fetch("/api/sales", {
-            cache: "no-store",
-          }),
-        ]);
+      const [
+        truckloadsResponse,
+        salesResponse,
+        suppliersResponse,
+      ] = await Promise.all([
+        fetch("/api/truckloads", {
+          cache: "no-store",
+        }),
+        fetch("/api/sales", {
+          cache: "no-store",
+        }),
+        fetch("/api/suppliers", {
+          cache: "no-store",
+        }),
+      ]);
 
       if (!truckloadsResponse.ok) {
         throw new Error(
@@ -190,17 +228,32 @@ export default function TruckloadsPage() {
         );
       }
 
+      if (!suppliersResponse.ok) {
+        const result = await suppliersResponse
+          .json()
+          .catch(() => null);
+
+        throw new Error(
+          result?.error ??
+            "Failed to load suppliers"
+        );
+      }
+
       const truckloadsData: ApiTruckload[] =
         await truckloadsResponse.json();
 
       const salesData: Sale[] =
         await salesResponse.json();
 
+      const suppliersData: SuppliersResponse =
+        await suppliersResponse.json();
+
       setTruckloads(
         truckloadsData.map(normalizeTruckload)
       );
 
       setSales(salesData);
+      setSuppliers(suppliersData.suppliers);
     } catch (err) {
       console.error(err);
 
@@ -320,6 +373,7 @@ export default function TruckloadsPage() {
 
     if (
       !supplier.trim() ||
+      (supplierMode === "existing" && !supplierId) ||
       !retailer.trim() ||
       !destination.trim() ||
       !Number.isInteger(palletNumber) ||
@@ -351,6 +405,10 @@ export default function TruckloadsPage() {
           body: JSON.stringify({
             supplier:
               supplier.trim(),
+            supplierId:
+              supplierMode === "existing"
+                ? Number(supplierId)
+                : null,
             retailer:
               retailer.trim(),
             pallets:
@@ -379,6 +437,8 @@ export default function TruckloadsPage() {
       }
 
       setSupplier("");
+      setSupplierId("");
+      setSupplierMode("existing");
       setRetailer("");
       setPallets("24");
       setPurchase("");
@@ -733,17 +793,105 @@ export default function TruckloadsPage() {
                 className="grid gap-5 md:grid-cols-2"
               >
                 <Field label="Supplier">
-                  <input
-                    required
-                    value={supplier}
-                    onChange={(event) =>
-                      setSupplier(
-                        event.target.value
-                      )
-                    }
-                    placeholder="The Liquidation Group"
-                    className={inputStyle}
-                  />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSupplierMode("existing");
+                          setSupplier("");
+                          setSupplierId("");
+                        }}
+                        className={
+                          supplierMode === "existing"
+                            ? "rounded-lg bg-white px-3 py-2 text-sm font-semibold text-black"
+                            : "rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:border-neutral-500"
+                        }
+                      >
+                        Existing Supplier
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSupplierMode("new");
+                          setSupplier("");
+                          setSupplierId("");
+                        }}
+                        className={
+                          supplierMode === "new"
+                            ? "rounded-lg bg-white px-3 py-2 text-sm font-semibold text-black"
+                            : "rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:border-neutral-500"
+                        }
+                      >
+                        New Supplier
+                      </button>
+                    </div>
+
+                    {supplierMode === "existing" ? (
+                      <select
+                        required
+                        value={supplierId}
+                        onChange={(event) => {
+                          const nextSupplierId =
+                            event.target.value;
+
+                          setSupplierId(
+                            nextSupplierId
+                          );
+
+                          const selectedSupplier =
+                            suppliers.find(
+                              (item) =>
+                                item.id ===
+                                Number(
+                                  nextSupplierId
+                                )
+                            );
+
+                          setSupplier(
+                            selectedSupplier?.name ??
+                              ""
+                          );
+                        }}
+                        className={inputStyle}
+                      >
+                        <option value="">
+                          Select supplier
+                        </option>
+
+                        {suppliers.map(
+                          (supplierOption) => (
+                            <option
+                              key={
+                                supplierOption.id
+                              }
+                              value={
+                                supplierOption.id
+                              }
+                            >
+                              {
+                                supplierOption.name
+                              }
+                            </option>
+                          )
+                        )}
+                      </select>
+                    ) : (
+                      <input
+                        required
+                        value={supplier}
+                        onChange={(event) => {
+                          setSupplier(
+                            event.target.value
+                          );
+                          setSupplierId("");
+                        }}
+                        placeholder="The Liquidation Group"
+                        className={inputStyle}
+                      />
+                    )}
+                  </div>
                 </Field>
 
                 <Field label="Retailer">

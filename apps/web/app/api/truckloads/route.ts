@@ -165,6 +165,63 @@ export async function POST(request: Request) {
       );
     }
 
+    const requestedSupplierId =
+      body.supplierId === null ||
+      body.supplierId === undefined ||
+      body.supplierId === ""
+        ? null
+        : Number(body.supplierId);
+
+    if (
+      requestedSupplierId !== null &&
+      (!Number.isInteger(requestedSupplierId) ||
+        requestedSupplierId <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid supplier ID" },
+        { status: 400 }
+      );
+    }
+
+    let supplierRecord =
+      requestedSupplierId !== null
+        ? await db.orm.public.Supplier
+            .where({
+              id: requestedSupplierId,
+              organizationId: organization.id,
+              isActive: true,
+            })
+            .first()
+        : await db.orm.public.Supplier
+            .where({
+              organizationId: organization.id,
+              name: supplier,
+              isActive: true,
+            })
+            .first();
+
+    if (
+      requestedSupplierId !== null &&
+      !supplierRecord
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Supplier not found or inactive",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!supplierRecord) {
+      supplierRecord =
+        await db.orm.public.Supplier.create({
+          organizationId: organization.id,
+          name: supplier,
+          isActive: true,
+        });
+    }
+
     const latest =
       await db.orm.public.Truckload
         .where({
@@ -191,6 +248,7 @@ export async function POST(request: Request) {
         code,
         organizationId: organization.id,
         supplier,
+        supplierId: supplierRecord.id,
         retailer,
         pallets,
         purchase: String(purchase),
