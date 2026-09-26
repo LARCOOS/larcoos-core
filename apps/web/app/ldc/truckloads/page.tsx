@@ -172,6 +172,44 @@ export default function TruckloadsPage() {
   const [supplier, setSupplier] =
     useState("");
 
+  const [supplierLegalName, setSupplierLegalName] =
+    useState("");
+
+  const [supplierContactName, setSupplierContactName] =
+    useState("");
+
+  const [supplierEmail, setSupplierEmail] =
+    useState("");
+
+  const [supplierPhone, setSupplierPhone] =
+    useState("");
+
+  const [supplierAddressLine1, setSupplierAddressLine1] =
+    useState("");
+
+  const [supplierAddressLine2, setSupplierAddressLine2] =
+    useState("");
+
+  const [supplierCity, setSupplierCity] =
+    useState("");
+
+  const [supplierStateRegion, setSupplierStateRegion] =
+    useState("");
+
+  const [supplierPostalCode, setSupplierPostalCode] =
+    useState("");
+
+  const [supplierCountry, setSupplierCountry] =
+    useState("USA");
+
+  const [
+    supplierPaymentInstructions,
+    setSupplierPaymentInstructions,
+  ] = useState("");
+
+  const [supplierNotes, setSupplierNotes] =
+    useState("");
+
   const [retailer, setRetailer] =
     useState("");
 
@@ -394,6 +432,68 @@ export default function TruckloadsPage() {
       setSaving(true);
       setError("");
 
+      let resolvedSupplierId =
+        supplierMode === "existing"
+          ? Number(supplierId)
+          : null;
+
+      if (supplierMode === "new") {
+        const supplierResponse = await fetch(
+          "/api/suppliers",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              name: supplier.trim(),
+              legalName:
+                supplierLegalName.trim(),
+              contactName:
+                supplierContactName.trim(),
+              email: supplierEmail.trim(),
+              phone: supplierPhone.trim(),
+              addressLine1:
+                supplierAddressLine1.trim(),
+              addressLine2:
+                supplierAddressLine2.trim(),
+              city: supplierCity.trim(),
+              stateRegion:
+                supplierStateRegion.trim(),
+              postalCode:
+                supplierPostalCode.trim(),
+              country:
+                supplierCountry.trim(),
+              paymentInstructions:
+                supplierPaymentInstructions.trim(),
+              notes: supplierNotes.trim(),
+            }),
+          }
+        );
+
+        const supplierResult =
+          await supplierResponse
+            .json()
+            .catch(() => null);
+
+        if (!supplierResponse.ok) {
+          throw new Error(
+            supplierResult?.error ??
+              "Failed to create supplier"
+          );
+        }
+
+        if (!supplierResult?.supplier?.id) {
+          throw new Error(
+            "Supplier was created without a valid ID"
+          );
+        }
+
+        resolvedSupplierId =
+          Number(supplierResult.supplier.id);
+      }
+
       const response = await fetch(
         "/api/truckloads",
         {
@@ -406,9 +506,7 @@ export default function TruckloadsPage() {
             supplier:
               supplier.trim(),
             supplierId:
-              supplierMode === "existing"
-                ? Number(supplierId)
-                : null,
+              resolvedSupplierId,
             retailer:
               retailer.trim(),
             pallets:
@@ -439,6 +537,18 @@ export default function TruckloadsPage() {
       setSupplier("");
       setSupplierId("");
       setSupplierMode("existing");
+      setSupplierLegalName("");
+      setSupplierContactName("");
+      setSupplierEmail("");
+      setSupplierPhone("");
+      setSupplierAddressLine1("");
+      setSupplierAddressLine2("");
+      setSupplierCity("");
+      setSupplierStateRegion("");
+      setSupplierPostalCode("");
+      setSupplierCountry("USA");
+      setSupplierPaymentInstructions("");
+      setSupplierNotes("");
       setRetailer("");
       setPallets("24");
       setPurchase("");
@@ -756,7 +866,7 @@ export default function TruckloadsPage() {
         </section>
 
         {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 p-4"><div className="flex min-h-full items-start justify-center py-4">
             <div className="w-full max-w-2xl rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
               <div className="mb-6 flex items-start justify-between">
                 <div>
@@ -894,6 +1004,162 @@ export default function TruckloadsPage() {
                   </div>
                 </Field>
 
+                {supplierMode === "new" && (
+                  <div className="md:col-span-2 rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
+                    <div className="mb-4">
+                      <h3 className="text-sm font-semibold text-white">
+                        Supplier Profile
+                      </h3>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Create the reusable supplier master record for future truckloads.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field label="Legal Name">
+                        <input
+                          value={supplierLegalName}
+                          onChange={(event) =>
+                            setSupplierLegalName(event.target.value)
+                          }
+                          placeholder="Legal business name"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="Contact Name">
+                        <input
+                          value={supplierContactName}
+                          onChange={(event) =>
+                            setSupplierContactName(event.target.value)
+                          }
+                          placeholder="Primary contact"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="Email">
+                        <input
+                          type="email"
+                          value={supplierEmail}
+                          onChange={(event) =>
+                            setSupplierEmail(event.target.value)
+                          }
+                          placeholder="supplier@example.com"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="Phone">
+                        <input
+                          type="tel"
+                          value={supplierPhone}
+                          onChange={(event) =>
+                            setSupplierPhone(event.target.value)
+                          }
+                          placeholder="+1 555 555 5555"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="Address">
+                        <input
+                          value={supplierAddressLine1}
+                          onChange={(event) =>
+                            setSupplierAddressLine1(event.target.value)
+                          }
+                          placeholder="Street address"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="Address Line 2">
+                        <input
+                          value={supplierAddressLine2}
+                          onChange={(event) =>
+                            setSupplierAddressLine2(event.target.value)
+                          }
+                          placeholder="Suite, unit, warehouse"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="City">
+                        <input
+                          value={supplierCity}
+                          onChange={(event) =>
+                            setSupplierCity(event.target.value)
+                          }
+                          placeholder="City"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="State / Region">
+                        <input
+                          value={supplierStateRegion}
+                          onChange={(event) =>
+                            setSupplierStateRegion(event.target.value)
+                          }
+                          placeholder="State or region"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="Postal Code">
+                        <input
+                          value={supplierPostalCode}
+                          onChange={(event) =>
+                            setSupplierPostalCode(event.target.value)
+                          }
+                          placeholder="ZIP / Postal code"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <Field label="Country">
+                        <input
+                          value={supplierCountry}
+                          onChange={(event) =>
+                            setSupplierCountry(event.target.value)
+                          }
+                          placeholder="USA"
+                          className={inputStyle}
+                        />
+                      </Field>
+
+                      <div className="md:col-span-2">
+                        <Field label="Payment Instructions">
+                          <textarea
+                            value={supplierPaymentInstructions}
+                            onChange={(event) =>
+                              setSupplierPaymentInstructions(
+                                event.target.value
+                              )
+                            }
+                            placeholder="Wire, ACH, payment terms, account instructions..."
+                            className={inputStyle}
+                            rows={3}
+                          />
+                        </Field>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Field label="Supplier Notes">
+                          <textarea
+                            value={supplierNotes}
+                            onChange={(event) =>
+                              setSupplierNotes(event.target.value)
+                            }
+                            placeholder="Merchandise, warehouse, pickup or supplier notes..."
+                            className={inputStyle}
+                            rows={3}
+                          />
+                        </Field>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <Field label="Retailer">
                   <input
                     required
@@ -1045,6 +1311,7 @@ export default function TruckloadsPage() {
                 </div>
               </form>
             </div>
+          </div>
           </div>
         )}
       </div>
