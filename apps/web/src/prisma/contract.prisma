@@ -556,6 +556,7 @@ model Truckload {
   palletRecords Pallet[]
   receiving     TruckReceiving?
   procurementPayments TruckloadPayment[]
+  costs               TruckloadCost[]
   sales         Sale[]
 
   createdAt TimestamptzString @default(now())
@@ -589,6 +590,65 @@ model Truckload {
 //
 // ============================================================
 
+// ============================================================
+// LDC — TRUCKLOAD COST / INCURRED OBLIGATION V2A
+// ============================================================
+//
+// Represents an incurred cost or payable obligation.
+// This is NOT proof that money was paid.
+//
+// costType examples:
+// CUSTOMS
+// BROKER
+// FORKLIFT
+// LABOR
+// FUEL
+// TOLLS
+// OTHER
+//
+// status:
+// OPEN
+// CONFIRMED
+// VOID
+//
+// Only CONFIRMED costs contribute to operational landed cost.
+// Payments remain independently recorded in TruckloadPayment.
+//
+// ============================================================
+
+model TruckloadCost {
+  id          Int @id @default(autoincrement())
+  truckloadId Int
+
+  costType String
+  amount   Decimal
+  currency String @default("USD")
+  status   String @default("CONFIRMED")
+
+  vendorName String?
+  reference  String?
+  notes      String?
+
+  incurredAt TimestamptzString @default(now())
+
+  truckload Truckload @relation(
+    fields: [truckloadId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@index([truckloadId])
+  @@index([costType])
+  @@index([status])
+  @@index([incurredAt])
+}
+
+// ============================================================
+// LDC — TRUCKLOAD PAYMENT / PROCUREMENT V2A
+// ============================================================
 model TruckloadPayment {
   id          Int @id @default(autoincrement())
   truckloadId Int

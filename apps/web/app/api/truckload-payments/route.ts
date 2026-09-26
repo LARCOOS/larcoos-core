@@ -148,6 +148,33 @@ async function getConfirmedTotals(
   };
 }
 
+async function getConfirmedCostTotals(
+  truckloadId: number
+) {
+  const costs =
+    await db.orm.public.TruckloadCost
+      .where({
+        truckloadId,
+        status: "CONFIRMED",
+      })
+      .all();
+
+  let operationalCostIncurred = 0;
+
+  for (const cost of costs) {
+    const amount = Number(cost.amount);
+
+    if (!Number.isFinite(amount)) {
+      continue;
+    }
+
+    operationalCostIncurred += amount;
+  }
+
+  return {
+    operationalCostIncurred,
+  };
+}
 export async function GET(request: Request) {
   try {
     const { organization } =
@@ -195,6 +222,11 @@ export async function GET(request: Request) {
     const totals =
       await getConfirmedTotals(truckload.id);
 
+    const costTotals =
+      await getConfirmedCostTotals(
+        truckload.id
+      );
+
     const purchase = Number(
       truckload.purchase
     );
@@ -230,6 +262,7 @@ export async function GET(request: Request) {
       payments,
       totals: {
         ...totals,
+        ...costTotals,
         supplierBalance: Math.max(
           purchase - totals.merchandisePaid,
           0
@@ -239,6 +272,15 @@ export async function GET(request: Request) {
             totals.freightPaid,
           0
         ),
+        operationalBalance: Math.max(
+          costTotals.operationalCostIncurred -
+            totals.operationalPaid,
+          0
+        ),
+        currentLandedCost:
+          purchase +
+          freightObligation +
+          costTotals.operationalCostIncurred,
         merchandisePaymentStatus:
           deriveMerchandisePaymentStatus(
             purchase,
