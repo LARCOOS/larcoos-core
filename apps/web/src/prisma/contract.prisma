@@ -523,6 +523,27 @@ model Truckload {
   freight     Decimal
   destination String
 
+  // -----------------------------------------
+  // PURCHASE / TRANSPORT PLAN
+  // -----------------------------------------
+
+  supplierReference String?
+  purchaseDate       TimestamptzString?
+
+  // Historical origin snapshot for this load.
+  // Supplier master data may later prefill it,
+  // but changing a supplier must not rewrite
+  // the history of an existing truckload.
+  origin String?
+
+  estimatedPieces  Int?
+  carrier          String?
+  estimatedArrival TimestamptzString?
+
+  // FULL_PROCESSING or PALLET_VERIFICATION.
+  // Nullable for legacy truckloads.
+  processingMode String?
+
   status String @default("Planned")
 
   // -----------------------------------------

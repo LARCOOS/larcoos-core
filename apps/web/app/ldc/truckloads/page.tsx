@@ -222,6 +222,29 @@ export default function TruckloadsPage() {
   const [freight, setFreight] =
     useState("");
 
+  const [supplierReference, setSupplierReference] =
+    useState("");
+
+  const [purchaseDate, setPurchaseDate] =
+    useState("");
+
+  const [origin, setOrigin] =
+    useState("");
+
+  const [estimatedPieces, setEstimatedPieces] =
+    useState("");
+
+  const [carrier, setCarrier] =
+    useState("");
+
+  const [estimatedArrival, setEstimatedArrival] =
+    useState("");
+
+  const [processingMode, setProcessingMode] =
+    useState<"FULL_PROCESSING" | "PALLET_VERIFICATION">(
+      "FULL_PROCESSING"
+    );
+
   const [destination, setDestination] =
     useState("ViDaMar - Puruandiro");
 
@@ -409,6 +432,23 @@ export default function TruckloadsPage() {
     const palletNumber =
       Number(pallets);
 
+    const estimatedPiecesNumber =
+      estimatedPieces.trim() === ""
+        ? null
+        : Number(estimatedPieces);
+
+    if (
+      estimatedPiecesNumber !== null &&
+      (!Number.isInteger(estimatedPiecesNumber) ||
+        estimatedPiecesNumber < 0)
+    ) {
+      setError(
+        "Estimated pieces must be a whole number of 0 or greater."
+      );
+
+      return;
+    }
+
     if (
       !supplier.trim() ||
       (supplierMode === "existing" && !supplierId) ||
@@ -515,6 +555,19 @@ export default function TruckloadsPage() {
               purchaseNumber,
             freight:
               freightNumber,
+            supplierReference:
+              supplierReference.trim(),
+            purchaseDate:
+              purchaseDate || null,
+            origin:
+              origin.trim(),
+            estimatedPieces:
+              estimatedPiecesNumber,
+            carrier:
+              carrier.trim(),
+            estimatedArrival:
+              estimatedArrival || null,
+            processingMode,
             destination:
               destination.trim(),
             status,
@@ -553,6 +606,13 @@ export default function TruckloadsPage() {
       setPallets("24");
       setPurchase("");
       setFreight("");
+      setSupplierReference("");
+      setPurchaseDate("");
+      setOrigin("");
+      setEstimatedPieces("");
+      setCarrier("");
+      setEstimatedArrival("");
+      setProcessingMode("FULL_PROCESSING");
       setDestination(
         "ViDaMar - Puruandiro"
       );
@@ -963,6 +1023,22 @@ export default function TruckloadsPage() {
                             selectedSupplier?.name ??
                               ""
                           );
+
+                          const supplierOrigin =
+                            selectedSupplier
+                              ? [
+                                  selectedSupplier.addressLine1,
+                                  selectedSupplier.addressLine2,
+                                  selectedSupplier.city,
+                                  selectedSupplier.stateRegion,
+                                  selectedSupplier.postalCode,
+                                  selectedSupplier.country,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")
+                              : "";
+
+                          setOrigin(supplierOrigin);
                         }}
                         className={inputStyle}
                       >
@@ -1160,133 +1236,213 @@ export default function TruckloadsPage() {
                     </div>
                   </div>
                 )}
-                <Field label="Retailer">
-                  <input
-                    required
-                    value={retailer}
-                    onChange={(event) =>
-                      setRetailer(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Lowe's"
-                    className={inputStyle}
-                  />
-                </Field>
 
-                <Field label="Pallets">
-                  <input
-                    required
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={pallets}
-                    onChange={(event) =>
-                      setPallets(
-                        event.target.value
-                      )
-                    }
-                    className={inputStyle}
-                  />
-                </Field>
+                <div className="md:col-span-2 rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">
+                      Truckload Information
+                    </h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Purchase, transport and processing plan for this load.
+                    </p>
+                  </div>
 
-                <Field label="Purchase Cost">
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={purchase}
-                    onChange={(event) =>
-                      setPurchase(
-                        event.target.value
-                      )
-                    }
-                    placeholder="4700"
-                    className={inputStyle}
-                  />
-                </Field>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field label="Retailer">
+                      <input
+                        required
+                        value={retailer}
+                        onChange={(event) =>
+                          setRetailer(event.target.value)
+                        }
+                        placeholder="Lowe's"
+                        className={inputStyle}
+                      />
+                    </Field>
 
-                <Field label="Freight Cost">
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={freight}
-                    onChange={(event) =>
-                      setFreight(
-                        event.target.value
-                      )
-                    }
-                    placeholder="900"
-                    className={inputStyle}
-                  />
-                </Field>
+                    <Field label="Supplier Reference">
+                      <input
+                        value={supplierReference}
+                        onChange={(event) =>
+                          setSupplierReference(event.target.value)
+                        }
+                        placeholder="Invoice, load or PO number"
+                        className={inputStyle}
+                      />
+                    </Field>
 
-                <Field label="Status">
-                  <select
-                    value={status}
-                    onChange={(event) =>
-                      setStatus(
-                        event.target.value
-                      )
-                    }
-                    className={inputStyle}
-                  >
-                    <option>
-                      Planned
-                    </option>
+                    <Field label="Purchase Date">
+                      <input
+                        type="date"
+                        value={purchaseDate}
+                        onChange={(event) =>
+                          setPurchaseDate(event.target.value)
+                        }
+                        className={inputStyle}
+                      />
+                    </Field>
 
-                    <option>
-                      Purchased
-                    </option>
+                    <Field label="Source Pallets">
+                      <input
+                        required
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={pallets}
+                        onChange={(event) =>
+                          setPallets(event.target.value)
+                        }
+                        className={inputStyle}
+                      />
+                    </Field>
 
-                    <option>
-                      In Transit
-                    </option>
+                    <Field label="Estimated Pieces">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={estimatedPieces}
+                        onChange={(event) =>
+                          setEstimatedPieces(event.target.value)
+                        }
+                        placeholder="Optional"
+                        className={inputStyle}
+                      />
+                    </Field>
 
-                    <option>
-                      Received
-                    </option>
+                    <Field label="Carrier">
+                      <input
+                        value={carrier}
+                        onChange={(event) =>
+                          setCarrier(event.target.value)
+                        }
+                        placeholder="Carrier or transport company"
+                        className={inputStyle}
+                      />
+                    </Field>
 
-                    <option>
-                      Unloading
-                    </option>
+                    <div className="md:col-span-2">
+                      <Field label="Origin">
+                        <input
+                          value={origin}
+                          onChange={(event) =>
+                            setOrigin(event.target.value)
+                          }
+                          placeholder="Supplier warehouse / pickup origin"
+                          className={inputStyle}
+                        />
+                      </Field>
+                    </div>
 
-                    <option>
-                      Unloaded
-                    </option>
+                    <div className="md:col-span-2">
+                      <Field label="Destination">
+                        <input
+                          required
+                          value={destination}
+                          onChange={(event) =>
+                            setDestination(event.target.value)
+                          }
+                          className={inputStyle}
+                        />
+                      </Field>
+                    </div>
 
-                    <option>
-                      Processing
-                    </option>
+                    <Field label="Estimated Arrival">
+                      <input
+                        type="datetime-local"
+                        value={estimatedArrival}
+                        onChange={(event) =>
+                          setEstimatedArrival(event.target.value)
+                        }
+                        className={inputStyle}
+                      />
+                    </Field>
 
-                    <option>
-                      Ready for Export
-                    </option>
+                    <Field label="Processing Mode">
+                      <select
+                        value={processingMode}
+                        onChange={(event) =>
+                          setProcessingMode(
+                            event.target.value as
+                              | "FULL_PROCESSING"
+                              | "PALLET_VERIFICATION"
+                          )
+                        }
+                        className={inputStyle}
+                      >
+                        <option value="FULL_PROCESSING">
+                          Process at LDC
+                        </option>
+                        <option value="PALLET_VERIFICATION">
+                          Ship As-Is / Pallet Verification
+                        </option>
+                      </select>
+                    </Field>
 
-                    <option>
-                      Delivered
-                    </option>
-                  </select>
-                </Field>
-
-                <div className="md:col-span-2">
-                  <Field label="Destination">
-                    <input
-                      required
-                      value={destination}
-                      onChange={(event) =>
-                        setDestination(
-                          event.target.value
-                        )
-                      }
-                      className={inputStyle}
-                    />
-                  </Field>
+                    <Field label="Initial Status">
+                      <select
+                        value={status}
+                        onChange={(event) =>
+                          setStatus(event.target.value)
+                        }
+                        className={inputStyle}
+                      >
+                        <option>Planned</option>
+                        <option>Purchased</option>
+                        <option>In Transit</option>
+                        <option>Received</option>
+                        <option>Unloading</option>
+                        <option>Unloaded</option>
+                        <option>Processing</option>
+                        <option>Ready for Export</option>
+                        <option>Delivered</option>
+                      </select>
+                    </Field>
+                  </div>
                 </div>
 
+                <div className="md:col-span-2 rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">
+                      Financial Estimate
+                    </h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Initial procurement and freight estimates. Actual freight is confirmed during Receiving.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field label="Purchase Cost">
+                      <input
+                        required
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={purchase}
+                        onChange={(event) =>
+                          setPurchase(event.target.value)
+                        }
+                        placeholder="4700"
+                        className={inputStyle}
+                      />
+                    </Field>
+
+                    <Field label="Estimated Freight">
+                      <input
+                        required
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={freight}
+                        onChange={(event) =>
+                          setFreight(event.target.value)
+                        }
+                        placeholder="900"
+                        className={inputStyle}
+                      />
+                    </Field>
+                  </div>
+                </div>
                 <div className="mt-2 flex justify-end gap-3 border-t border-neutral-800 pt-5 md:col-span-2">
                   <button
                     type="button"

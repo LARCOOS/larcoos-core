@@ -147,6 +147,94 @@ export async function POST(request: Request) {
     const purchase = Number(body.purchase);
     const freight = Number(body.freight);
 
+    const supplierReference = String(
+      body.supplierReference ?? ""
+    ).trim();
+
+    const origin = String(
+      body.origin ?? ""
+    ).trim();
+
+    const carrier = String(
+      body.carrier ?? ""
+    ).trim();
+
+    const processingMode = String(
+      body.processingMode ?? ""
+    ).trim();
+
+    const estimatedPieces =
+      body.estimatedPieces === null ||
+      body.estimatedPieces === undefined ||
+      body.estimatedPieces === ""
+        ? null
+        : Number(body.estimatedPieces);
+    const purchaseDateInput = String(
+      body.purchaseDate ?? ""
+    ).trim();
+
+    const purchaseDate =
+      purchaseDateInput
+        ? /^\d{4}-\d{2}-\d{2}$/.test(
+            purchaseDateInput
+          )
+          ? `${purchaseDateInput}T00:00:00.000Z`
+          : null
+        : null;
+
+    const estimatedArrivalInput = String(
+      body.estimatedArrival ?? ""
+    ).trim();
+
+    const estimatedArrival =
+      estimatedArrivalInput
+        ? new Date(estimatedArrivalInput)
+        : null;
+
+    if (
+      estimatedPieces !== null &&
+      (!Number.isInteger(estimatedPieces) ||
+        estimatedPieces < 0)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid estimated pieces" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      purchaseDateInput &&
+      purchaseDate === null
+    ) {
+      return NextResponse.json(
+        { error: "Invalid purchase date" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      estimatedArrival &&
+      Number.isNaN(estimatedArrival.getTime())
+    ) {
+      return NextResponse.json(
+        { error: "Invalid estimated arrival" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      processingMode &&
+      ![
+        "FULL_PROCESSING",
+        "PALLET_VERIFICATION",
+      ].includes(processingMode)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid processing mode" },
+        { status: 400 }
+      );
+    }
+
     if (
       !supplier ||
       !retailer ||
@@ -254,6 +342,18 @@ export async function POST(request: Request) {
         purchase: String(purchase),
         freight: String(freight),
         destination,
+        supplierReference:
+          supplierReference || null,
+        purchaseDate,
+        origin:
+          origin || null,
+        estimatedPieces,
+        carrier:
+          carrier || null,
+        estimatedArrival:
+          estimatedArrival?.toISOString() ?? null,
+        processingMode:
+          processingMode || null,
         status,
         paymentMethod: "Unspecified",
         paymentStatus: "Unpaid",

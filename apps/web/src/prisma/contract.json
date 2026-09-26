@@ -3083,6 +3083,13 @@
                   "kind": "scalar"
                 }
               },
+              "carrier": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "code": {
                 "nullable": false,
                 "type": {
@@ -3101,6 +3108,20 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "estimatedArrival": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "estimatedPieces": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
               },
@@ -3129,6 +3150,13 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -3167,10 +3195,24 @@
                   "kind": "scalar"
                 }
               },
+              "processingMode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "purchase": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
+                  "kind": "scalar"
+                }
+              },
+              "purchaseDate": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
               },
@@ -3199,6 +3241,13 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "supplierReference": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -3341,6 +3390,9 @@
                 "amountPaid": {
                   "column": "amountPaid"
                 },
+                "carrier": {
+                  "column": "carrier"
+                },
                 "code": {
                   "column": "code"
                 },
@@ -3349,6 +3401,12 @@
                 },
                 "destination": {
                   "column": "destination"
+                },
+                "estimatedArrival": {
+                  "column": "estimatedArrival"
+                },
+                "estimatedPieces": {
+                  "column": "estimatedPieces"
                 },
                 "freight": {
                   "column": "freight"
@@ -3361,6 +3419,9 @@
                 },
                 "organizationId": {
                   "column": "organizationId"
+                },
+                "origin": {
+                  "column": "origin"
                 },
                 "pallets": {
                   "column": "pallets"
@@ -3377,8 +3438,14 @@
                 "paymentStatus": {
                   "column": "paymentStatus"
                 },
+                "processingMode": {
+                  "column": "processingMode"
+                },
                 "purchase": {
                   "column": "purchase"
+                },
+                "purchaseDate": {
+                  "column": "purchaseDate"
                 },
                 "retailer": {
                   "column": "retailer"
@@ -3391,6 +3458,9 @@
                 },
                 "supplierId": {
                   "column": "supplierId"
+                },
+                "supplierReference": {
+                  "column": "supplierReference"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -6220,6 +6290,11 @@
                   "nativeType": "numeric",
                   "nullable": false
                 },
+                "carrier": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "code": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -6238,6 +6313,16 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "estimatedArrival": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "estimatedPieces": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
                 },
                 "freight": {
                   "codecId": "pg/numeric@1",
@@ -6261,6 +6346,11 @@
                 "organizationId": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
+                  "nullable": true
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": true
                 },
                 "pallets": {
@@ -6296,10 +6386,20 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "processingMode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "purchase": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
                   "nullable": false
+                },
+                "purchaseDate": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
                 },
                 "retailer": {
                   "codecId": "pg/text@1",
@@ -6323,6 +6423,11 @@
                 "supplierId": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
+                  "nullable": true
+                },
+                "supplierReference": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": true
                 },
                 "updatedAt": {
@@ -6859,7 +6964,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "69097e336f69c8ecb532d0187dd3d8e78a88f5d1283996e4ced817a5c51b2e4c"
+    "storageHash": "17438021cd36c12674320912f60a8a8f43b0c07eb7e2b9c20075822f3d204d0d"
   },
   "execution": {
     "executionHash": "05758dc5dbdcece435641bce2a1588972d941e15608e186552e7b095f19297b0",
