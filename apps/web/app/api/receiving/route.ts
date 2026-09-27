@@ -173,6 +173,14 @@ export async function GET(request: Request) {
           .where({ receivingId: receiving.id })
           .all()
       : [];
+    const operationCheckIns = receiving
+      ? await db.orm.public.TruckloadOperationCheckIn
+          .where({ receivingId: receiving.id })
+          .orderBy((checkIn) =>
+            checkIn.checkedInAt.asc()
+          )
+          .all()
+      : [];
 
     return NextResponse.json({
       success: true,
@@ -187,6 +195,8 @@ export async function GET(request: Request) {
 
       receiving,
       workers,
+      currentActorId: actor.id,
+      operationCheckIns,
 
       permissions: {
         canEditCompletedRecords:
@@ -502,7 +512,376 @@ export async function POST(request: Request) {
     }
 
     // =========================================================
-    // START UNLOADING
+    // TRUCKLOAD OPERATION CHECK-IN
+    // =========================================================
+
+    if (action === "check-in") {
+      const receiving =
+        await db.orm.public.TruckReceiving
+          .where({
+            truckloadId: truckload.id,
+          })
+          .first();
+
+      if (!receiving?.receivedAt) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Truck must be received before operation check-in",
+          },
+          { status: 409 }
+        );
+      }
+
+      const role = String(
+        body.role ?? ""
+      ).trim();
+
+      const notes =
+        String(
+          body.notes ?? ""
+        ).trim() || null;
+
+      if (!role) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Role is required",
+          },
+          { status: 400 }
+        );
+      }
+
+      const actorCheckIns =
+        await db.orm.public.TruckloadOperationCheckIn
+          .where({
+            receivingId: receiving.id,
+            actorId,
+          })
+          .all();
+
+      const activeCheckIn =
+        actorCheckIns.find(
+          (checkIn) =>
+            !checkIn.checkedOutAt
+        );
+
+      if (activeCheckIn) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Actor is already checked in to this truckload operation",
+            operationCheckIn:
+              activeCheckIn,
+          },
+          { status: 409 }
+        );
+      }
+
+      const now =
+        new Date().toISOString();
+
+      const operationCheckIn =
+        await db.orm.public.TruckloadOperationCheckIn.create({
+          receivingId: receiving.id,
+          actorId,
+          role,
+          checkedInAt: now,
+          notes,
+        });
+
+      await createKernelEvent({
+        eventType:
+          "TRUCKLOAD_WORKER_CHECKED_IN",
+        truckload,
+        actorId,
+
+        payload: {
+          operationCheckInId:
+            operationCheckIn.id,
+          receivingId:
+            receiving.id,
+          role,
+          checkedInAt: now,
+          notes,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        action: "check-in",
+        operationCheckIn,
+      });
+    }
+
+    // =========================================================
+    // TRUCKLOAD OPERATION CHECK-OUT
+    // =========================================================
+
+    if (action === "check-out") {
+      const receiving =
+        await db.orm.public.TruckReceiving
+          .where({
+            truckloadId: truckload.id,
+          })
+          .first();
+
+      if (!receiving) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Receiving operation not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      const actorCheckIns =
+        await db.orm.public.TruckloadOperationCheckIn
+          .where({
+            receivingId: receiving.id,
+            actorId,
+          })
+          .all();
+
+      const activeCheckIn =
+        actorCheckIns.find(
+          (checkIn) =>
+            !checkIn.checkedOutAt
+        );
+
+      if (!activeCheckIn) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Actor is not checked in to this truckload operation",
+          },
+          { status: 409 }
+        );
+      }
+
+      const now =
+        new Date().toISOString();
+
+      const operationCheckIn =
+        await db.orm.public.TruckloadOperationCheckIn
+          .where({
+            id: activeCheckIn.id,
+          })
+          .update({
+            checkedOutAt: now,
+          });
+
+      if (!operationCheckIn) {
+        throw new Error(
+          "Truckload operation check-out could not be saved"
+        );
+      }
+
+      await createKernelEvent({
+        eventType:
+          "TRUCKLOAD_WORKER_CHECKED_OUT",
+        truckload,
+        actorId,
+
+        payload: {
+          operationCheckInId:
+            operationCheckIn.id,
+          receivingId:
+            receiving.id,
+          role:
+            operationCheckIn.role,
+          checkedInAt:
+            operationCheckIn.checkedInAt,
+          checkedOutAt: now,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        action: "check-out",
+        operationCheckIn,
+      });
+    }
+
+    // =========================================================
+    // SAVE UNLOADING SETUP
+    // =========================================================
+
+    if (action === "save-unloading-setup") {
+      const receiving =
+        await db.orm.public.TruckReceiving
+          .where({
+            truckloadId: truckload.id,
+          })
+          .first();
+
+      if (!receiving?.receivedAt) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Truck must be received before unloading setup can be saved",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (receiving.unloadingStartedAt) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Unloading setup cannot be changed after unloading starts",
+          },
+          { status: 409 }
+        );
+      }
+
+      const forkliftUsed =
+        body.forkliftUsed === true;
+
+      const forkliftName =
+        forkliftUsed
+          ? String(body.forkliftName ?? "").trim() || null
+          : null;
+
+      const dockDoor =
+        String(body.dockDoor ?? "").trim() || null;
+
+      const forkliftConfigurationChanged =
+        receiving.forkliftUsed !== forkliftUsed ||
+        (receiving.forkliftName ?? null) !== forkliftName;
+
+      const updatedReceiving =
+        await db.orm.public.TruckReceiving
+          .where({ id: receiving.id })
+          .update({
+            forkliftUsed,
+            forkliftName,
+            dockDoor,
+
+            ...(forkliftConfigurationChanged
+              ? {
+                  forkliftSafetyCheckedAt: null,
+                  forkliftSafetyActorId: null,
+                  forkliftSafetyNotes: null,
+                }
+              : {}),
+          });
+
+      if (!updatedReceiving) {
+        throw new Error(
+          "Unloading setup could not be saved"
+        );
+      }
+
+      await createKernelEvent({
+        eventType: "UNLOADING_SETUP_SAVED",
+        truckload,
+        actorId,
+        payload: {
+          forkliftUsed,
+          forkliftName,
+          dockDoor,
+          forkliftSafetyReset:
+            forkliftConfigurationChanged,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        action: "save-unloading-setup",
+        receiving: updatedReceiving,
+      });
+    }
+
+    // =========================================================    // FORKLIFT SAFETY CHECK
+    // =========================================================
+
+    if (action === "forklift-safety-check") {
+      const receiving =
+        await db.orm.public.TruckReceiving
+          .where({
+            truckloadId: truckload.id,
+          })
+          .first();
+
+      if (!receiving?.receivedAt) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Truck must be received before forklift safety check",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (receiving.unloadingStartedAt) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Forklift safety check must be completed before unloading starts",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (!receiving.forkliftUsed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Forklift safety check is not required when forklift is not selected",
+          },
+          { status: 409 }
+        );
+      }
+
+      const now = new Date().toISOString();
+      const notes =
+        String(body.notes ?? "").trim() || null;
+
+      const updatedReceiving =
+        await db.orm.public.TruckReceiving
+          .where({ id: receiving.id })
+          .update({
+            forkliftSafetyCheckedAt: now,
+            forkliftSafetyActorId: actorId,
+            forkliftSafetyNotes: notes,
+          });
+
+      if (!updatedReceiving) {
+        throw new Error(
+          "Forklift safety check could not be recorded"
+        );
+      }
+
+      await createKernelEvent({
+        eventType: "FORKLIFT_SAFETY_CHECK_COMPLETED",
+        truckload,
+        actorId,
+        payload: {
+          checkedAt: now,
+          forkliftName: receiving.forkliftName,
+          notes,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        action: "forklift-safety-check",
+        receiving: updatedReceiving,
+      });
+    }
+
+    // =========================================================    // START UNLOADING
     // =========================================================
 
     if (action === "start-unloading") {
@@ -549,29 +928,38 @@ export async function POST(request: Request) {
         );
       }
 
+      if (
+        receiving.forkliftUsed &&
+        !receiving.forkliftSafetyCheckedAt
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Forklift safety check is required before unloading can start",
+            requiredAction:
+              "FORKLIFT_SAFETY_CHECK",
+          },
+          { status: 409 }
+        );
+      }
+
       const now = new Date().toISOString();
 
       const forkliftUsed =
-        body.forkliftUsed === true;
+        receiving.forkliftUsed;
 
       const forkliftName =
-        String(
-          body.forkliftName ?? ""
-        ).trim() || null;
+        receiving.forkliftName ?? null;
 
       const dockDoor =
-        String(
-          body.dockDoor ?? ""
-        ).trim() || null;
+        receiving.dockDoor ?? null;
 
       const updatedReceiving =
         await db.orm.public.TruckReceiving
           .where({ id: receiving.id })
           .update({
             unloadingStartedAt: now,
-            forkliftUsed,
-            forkliftName,
-            dockDoor,
           });
 
       if (!updatedReceiving) {
@@ -690,10 +1078,10 @@ export async function POST(request: Request) {
     }
 
     // =========================================================
-    // PALLET UNLOADED
+    // FINISH UNLOADING
     // =========================================================
 
-    if (action === "pallet-unloaded") {
+    if (action === "finish-unloading") {
       const sourcePalletRegistration =
         await ensureSourcePallets(truckload);
 
@@ -708,8 +1096,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             success: false,
-            error:
-              "Unloading must be started first",
+            error: "Unloading has not been started",
           },
           { status: 409 }
         );
@@ -719,229 +1106,78 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             success: false,
-            error:
-              "Unloading has already been completed",
+            error: "Unloading has already been completed",
           },
           { status: 409 }
         );
       }
 
-      const palletNumber = Number(
-        body.palletNumber
-      );
-
-      if (
-        !Number.isInteger(palletNumber) ||
-        palletNumber < 1 ||
-        palletNumber > truckload.pallets
-      ) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Invalid pallet number",
-          },
-          { status: 400 }
-        );
-      }
-
-      const pallet =
-        await db.orm.public.Pallet
+      const emptyTrailerEvidence =
+        await db.orm.public.EvidenceAsset
           .where({
-            truckloadId:
-              truckload.id,
-
-            palletNumber,
+            organizationId: truckload.organizationId,
+            entityType: "TRUCKLOAD",
+            entityId: String(truckload.id),
+            category: "EMPTY_TRAILER",
+            isActive: true,
           })
+          .orderBy((asset) => asset.id.desc())
           .first();
 
-      if (!pallet) {
+      if (!emptyTrailerEvidence) {
         return NextResponse.json(
           {
             success: false,
             error:
-              "Pallet record not found",
+              "Empty trailer photo is required before finishing unloading",
+            requiredEvidence: "EMPTY_TRAILER",
           },
-          { status: 404 }
+          { status: 409 }
         );
       }
+      const now = new Date();
+      const startedAt = new Date(
+        receiving.unloadingStartedAt
+      );
 
-      if (pallet.status === "Unloaded") {
-        return NextResponse.json({
-          success: true,
-          action: "pallet-unloaded",
-          alreadyUnloaded: true,
-          pallet,
+      const unloadingSeconds = Math.max(
+        0,
+        Math.floor(
+          (now.getTime() - startedAt.getTime()) / 1000
+        )
+      );
 
-          palletsUnloaded:
-            receiving.palletsUnloaded,
+      const finishedAt = now.toISOString();
 
-          palletsExpected:
-            truckload.pallets,
-        });
-      }
+      const sourcePallets =
+        await db.orm.public.Pallet
+          .where({
+            truckloadId: truckload.id,
+            palletType: "SOURCE",
+          })
+          .all();
 
-      const updatedPallet =
+      for (const pallet of sourcePallets) {
+        if (pallet.status === "Unloaded") {
+          continue;
+        }
+
         await db.orm.public.Pallet
           .where({ id: pallet.id })
           .update({
             status: "Unloaded",
           });
-
-      if (!updatedPallet) {
-        throw new Error(
-          "Pallet could not be updated"
-        );
       }
 
-      const unloadedCount =
-        Math.min(
-          Number(receiving.palletsUnloaded ?? 0) + 1,
-          truckload.pallets
-        );
+      const unloadedCount = truckload.pallets;
 
       const updatedReceiving =
         await db.orm.public.TruckReceiving
           .where({ id: receiving.id })
           .update({
-            palletsUnloaded:
-              unloadedCount,
-          });
-
-      if (!updatedReceiving) {
-        throw new Error(
-          "Receiving pallet count could not be updated"
-        );
-      }
-
-      await createKernelEvent({
-        eventType: "PALLET_UNLOADED",
-        truckload,
-        actorId,
-
-        payload: {
-          palletId:
-            updatedPallet.id,
-
-          palletCode:
-            updatedPallet.code,
-
-          palletNumber,
-
-          palletsUnloaded:
-            unloadedCount,
-
-          palletsExpected:
-            truckload.pallets,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        action: "pallet-unloaded",
-
-        pallet: updatedPallet,
-
-        palletsUnloaded:
-          updatedReceiving.palletsUnloaded,
-
-        palletsExpected:
-          truckload.pallets,
-      });
-    }
-
-    // =========================================================
-    // FINISH UNLOADING
-    // =========================================================
-
-    if (action === "finish-unloading") {
-      const receiving =
-        await db.orm.public.TruckReceiving
-          .where({
-            truckloadId: truckload.id,
-          })
-          .first();
-
-      if (!receiving?.unloadingStartedAt) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Unloading has not been started",
-          },
-          { status: 409 }
-        );
-      }
-
-      if (receiving.unloadingFinishedAt) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Unloading has already been completed",
-          },
-          { status: 409 }
-        );
-      }
-
-      const unloadedCount =
-        Number(receiving.palletsUnloaded ?? 0);
-
-      if (
-        unloadedCount !==
-        truckload.pallets
-      ) {
-        return NextResponse.json(
-          {
-            success: false,
-
-            error:
-              "All pallets must be unloaded before finishing",
-
-            palletsExpected:
-              truckload.pallets,
-
-            palletsUnloaded:
-              unloadedCount,
-
-            remaining:
-              truckload.pallets -
-              unloadedCount,
-          },
-          { status: 409 }
-        );
-      }
-
-      const now = new Date();
-
-      const startedAt = new Date(
-        receiving.unloadingStartedAt
-      );
-
-      const unloadingSeconds =
-        Math.max(
-          0,
-          Math.floor(
-            (now.getTime() -
-              startedAt.getTime()) /
-              1000
-          )
-        );
-
-      const finishedAt =
-        now.toISOString();
-
-      const updatedReceiving =
-        await db.orm.public.TruckReceiving
-          .where({ id: receiving.id })
-          .update({
-            unloadingFinishedAt:
-              finishedAt,
-
+            unloadingFinishedAt: finishedAt,
             unloadingSeconds,
-
-            palletsUnloaded:
-              unloadedCount,
+            palletsUnloaded: unloadedCount,
           });
 
       if (!updatedReceiving) {
@@ -953,8 +1189,7 @@ export async function POST(request: Request) {
       const workers =
         await db.orm.public.UnloadingWorker
           .where({
-            receivingId:
-              receiving.id,
+            receivingId: receiving.id,
           })
           .all();
 
@@ -968,15 +1203,14 @@ export async function POST(request: Request) {
             ? new Date(worker.startedAt)
             : startedAt;
 
-        const workSeconds =
-          Math.max(
-            0,
-            Math.floor(
-              (now.getTime() -
-                workerStartedAt.getTime()) /
-                1000
-            )
-          );
+        const workSeconds = Math.max(
+          0,
+          Math.floor(
+            (now.getTime() -
+              workerStartedAt.getTime()) /
+              1000
+          )
+        );
 
         await db.orm.public.UnloadingWorker
           .where({ id: worker.id })
@@ -1003,40 +1237,28 @@ export async function POST(request: Request) {
 
       const minutesPerPallet =
         unloadedCount > 0
-          ? unloadingMinutes /
-            unloadedCount
+          ? unloadingMinutes / unloadedCount
           : null;
 
       await createKernelEvent({
-        eventType:
-          "UNLOADING_FINISHED",
-
+        eventType: "UNLOADING_FINISHED",
         truckload,
         actorId,
-
         payload: {
-          startedAt:
-            receiving.unloadingStartedAt,
-
+          startedAt: receiving.unloadingStartedAt,
           finishedAt,
-
           unloadingSeconds,
           unloadingMinutes,
-
-          palletsUnloaded:
-            unloadedCount,
-
-          palletsExpected:
-            truckload.pallets,
-
+          palletsUnloaded: unloadedCount,
+          palletsExpected: truckload.pallets,
           palletsPerHour,
           minutesPerPallet,
-
-          forkliftUsed:
-            receiving.forkliftUsed,
-
-          forkliftName:
-            receiving.forkliftName,
+          forkliftUsed: receiving.forkliftUsed,
+          forkliftName: receiving.forkliftName,
+          sourcePalletsRegistered:
+            sourcePalletRegistration.created,
+          completionMode:
+            "CONTINUOUS_TRUCK_UNLOADING",
         },
       });
 
@@ -1044,40 +1266,25 @@ export async function POST(request: Request) {
         success: true,
         action: "finish-unloading",
         status: "Unloaded",
-
-        receiving:
-          updatedReceiving,
-
+        receiving: updatedReceiving,
         performance: {
           unloadingSeconds,
-
-          unloadingMinutes:
-            Number(
-              unloadingMinutes.toFixed(2)
-            ),
-
-          palletsUnloaded:
-            unloadedCount,
-
+          unloadingMinutes: Number(
+            unloadingMinutes.toFixed(2)
+          ),
+          palletsUnloaded: unloadedCount,
           palletsPerHour:
             palletsPerHour === null
               ? null
-              : Number(
-                  palletsPerHour.toFixed(2)
-                ),
-
+              : Number(palletsPerHour.toFixed(2)),
           minutesPerPallet:
             minutesPerPallet === null
               ? null
-              : Number(
-                  minutesPerPallet.toFixed(2)
-                ),
+              : Number(minutesPerPallet.toFixed(2)),
         },
       });
     }
 
-
-    // =========================================================
     // CORRECT COMPLETED RECEIVING RECORD
     // =========================================================
 

@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'05e2da62be0f80c9687ce00202e747bdf0f5308fac555a3ae457037110318f0e'>;
+  StorageHashBase<'260681c5dc374631a43c72315926dc98af1d4cd13d8aa3f0f36c73d222afe03b'>;
 export type ExecutionHash =
-  ExecutionHashBase<'dd9348fd100b63f5159d8005dd89b4ad74d1fadd6e2aba9b058e5e445b43487b'>;
+  ExecutionHashBase<'2c66e46d666fd6acd3cf375145c40300ee6414e1c344192631c93d8bded40a6a'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -314,11 +314,6 @@ export type FieldOutputTypes = {
     readonly InventoryUnit: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly unitId: CodecTypes['pg/text@1']['output'];
-      readonly publicUid: CodecTypes['pg/text@1']['output'] | null;
-      readonly labelStatus: CodecTypes['pg/text@1']['output'];
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['output'];
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly organizationId: CodecTypes['pg/int4@1']['output'];
       readonly truckloadId: CodecTypes['pg/int4@1']['output'];
       readonly palletId: CodecTypes['pg/int4@1']['output'] | null;
@@ -456,91 +451,23 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
-    readonly Supplier: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly organizationId: CodecTypes['pg/int4@1']['output'];
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly legalName: CodecTypes['pg/text@1']['output'] | null;
-      readonly contactName: CodecTypes['pg/text@1']['output'] | null;
-      readonly email: CodecTypes['pg/text@1']['output'] | null;
-      readonly phone: CodecTypes['pg/text@1']['output'] | null;
-      readonly addressLine1: CodecTypes['pg/text@1']['output'] | null;
-      readonly addressLine2: CodecTypes['pg/text@1']['output'] | null;
-      readonly city: CodecTypes['pg/text@1']['output'] | null;
-      readonly stateRegion: CodecTypes['pg/text@1']['output'] | null;
-      readonly postalCode: CodecTypes['pg/text@1']['output'] | null;
-      readonly country: CodecTypes['pg/text@1']['output'] | null;
-      readonly paymentInstructions: CodecTypes['pg/text@1']['output'] | null;
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly isActive: CodecTypes['pg/bool@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
     readonly Truckload: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly code: CodecTypes['pg/text@1']['output'];
       readonly organizationId: CodecTypes['pg/int4@1']['output'] | null;
       readonly locationId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly supplierId: CodecTypes['pg/int4@1']['output'] | null;
       readonly supplier: CodecTypes['pg/text@1']['output'];
       readonly retailer: CodecTypes['pg/text@1']['output'];
       readonly pallets: CodecTypes['pg/int4@1']['output'];
       readonly purchase: CodecTypes['pg/numeric@1']['output'];
       readonly freight: CodecTypes['pg/numeric@1']['output'];
       readonly destination: CodecTypes['pg/text@1']['output'];
-      readonly supplierReference: CodecTypes['pg/text@1']['output'] | null;
-      readonly purchaseDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly origin: CodecTypes['pg/text@1']['output'] | null;
-      readonly estimatedPieces: CodecTypes['pg/int4@1']['output'] | null;
-      readonly carrier: CodecTypes['pg/text@1']['output'] | null;
-      readonly estimatedArrival: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly processingMode: CodecTypes['pg/text@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly paymentMethod: CodecTypes['pg/text@1']['output'];
       readonly paymentStatus: CodecTypes['pg/text@1']['output'];
       readonly amountPaid: CodecTypes['pg/numeric@1']['output'];
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly paymentCountry: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
-    readonly TruckloadCost: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['output'];
-      readonly costType: CodecTypes['pg/text@1']['output'];
-      readonly amount: CodecTypes['pg/numeric@1']['output'];
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly status: CodecTypes['pg/text@1']['output'];
-      readonly vendorName: CodecTypes['pg/text@1']['output'] | null;
-      readonly reference: CodecTypes['pg/text@1']['output'] | null;
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly incurredAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
-    readonly TruckloadOperationCheckIn: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly receivingId: CodecTypes['pg/int4@1']['output'];
-      readonly actorId: CodecTypes['pg/int4@1']['output'];
-      readonly role: CodecTypes['pg/text@1']['output'];
-      readonly checkedInAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly checkedOutAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
-    readonly TruckloadPayment: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['output'];
-      readonly obligationType: CodecTypes['pg/text@1']['output'];
-      readonly amount: CodecTypes['pg/numeric@1']['output'];
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly method: CodecTypes['pg/text@1']['output'];
-      readonly status: CodecTypes['pg/text@1']['output'];
-      readonly payeeName: CodecTypes['pg/text@1']['output'] | null;
-      readonly reference: CodecTypes['pg/text@1']['output'] | null;
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly paidAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -568,9 +495,6 @@ export type FieldOutputTypes = {
       readonly palletsUnloaded: CodecTypes['pg/int4@1']['output'];
       readonly forkliftUsed: CodecTypes['pg/bool@1']['output'];
       readonly forkliftName: CodecTypes['pg/text@1']['output'] | null;
-      readonly forkliftSafetyCheckedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly forkliftSafetyActorId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly forkliftSafetyNotes: CodecTypes['pg/text@1']['output'] | null;
       readonly dockDoor: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -665,11 +589,6 @@ export type FieldInputTypes = {
     readonly InventoryUnit: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly unitId: CodecTypes['pg/text@1']['input'];
-      readonly publicUid: CodecTypes['pg/text@1']['input'] | null;
-      readonly labelStatus: CodecTypes['pg/text@1']['input'];
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['input'];
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly organizationId: CodecTypes['pg/int4@1']['input'];
       readonly truckloadId: CodecTypes['pg/int4@1']['input'];
       readonly palletId: CodecTypes['pg/int4@1']['input'] | null;
@@ -807,91 +726,23 @@ export type FieldInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
-    readonly Supplier: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly organizationId: CodecTypes['pg/int4@1']['input'];
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly legalName: CodecTypes['pg/text@1']['input'] | null;
-      readonly contactName: CodecTypes['pg/text@1']['input'] | null;
-      readonly email: CodecTypes['pg/text@1']['input'] | null;
-      readonly phone: CodecTypes['pg/text@1']['input'] | null;
-      readonly addressLine1: CodecTypes['pg/text@1']['input'] | null;
-      readonly addressLine2: CodecTypes['pg/text@1']['input'] | null;
-      readonly city: CodecTypes['pg/text@1']['input'] | null;
-      readonly stateRegion: CodecTypes['pg/text@1']['input'] | null;
-      readonly postalCode: CodecTypes['pg/text@1']['input'] | null;
-      readonly country: CodecTypes['pg/text@1']['input'] | null;
-      readonly paymentInstructions: CodecTypes['pg/text@1']['input'] | null;
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly isActive: CodecTypes['pg/bool@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
     readonly Truckload: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly code: CodecTypes['pg/text@1']['input'];
       readonly organizationId: CodecTypes['pg/int4@1']['input'] | null;
       readonly locationId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly supplierId: CodecTypes['pg/int4@1']['input'] | null;
       readonly supplier: CodecTypes['pg/text@1']['input'];
       readonly retailer: CodecTypes['pg/text@1']['input'];
       readonly pallets: CodecTypes['pg/int4@1']['input'];
       readonly purchase: CodecTypes['pg/numeric@1']['input'];
       readonly freight: CodecTypes['pg/numeric@1']['input'];
       readonly destination: CodecTypes['pg/text@1']['input'];
-      readonly supplierReference: CodecTypes['pg/text@1']['input'] | null;
-      readonly purchaseDate: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly origin: CodecTypes['pg/text@1']['input'] | null;
-      readonly estimatedPieces: CodecTypes['pg/int4@1']['input'] | null;
-      readonly carrier: CodecTypes['pg/text@1']['input'] | null;
-      readonly estimatedArrival: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly processingMode: CodecTypes['pg/text@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly paymentMethod: CodecTypes['pg/text@1']['input'];
       readonly paymentStatus: CodecTypes['pg/text@1']['input'];
       readonly amountPaid: CodecTypes['pg/numeric@1']['input'];
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly paymentCountry: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly TruckloadCost: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['input'];
-      readonly costType: CodecTypes['pg/text@1']['input'];
-      readonly amount: CodecTypes['pg/numeric@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly status: CodecTypes['pg/text@1']['input'];
-      readonly vendorName: CodecTypes['pg/text@1']['input'] | null;
-      readonly reference: CodecTypes['pg/text@1']['input'] | null;
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly incurredAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly TruckloadOperationCheckIn: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly receivingId: CodecTypes['pg/int4@1']['input'];
-      readonly actorId: CodecTypes['pg/int4@1']['input'];
-      readonly role: CodecTypes['pg/text@1']['input'];
-      readonly checkedInAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly checkedOutAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly TruckloadPayment: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['input'];
-      readonly obligationType: CodecTypes['pg/text@1']['input'];
-      readonly amount: CodecTypes['pg/numeric@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly method: CodecTypes['pg/text@1']['input'];
-      readonly status: CodecTypes['pg/text@1']['input'];
-      readonly payeeName: CodecTypes['pg/text@1']['input'] | null;
-      readonly reference: CodecTypes['pg/text@1']['input'] | null;
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly paidAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -919,9 +770,6 @@ export type FieldInputTypes = {
       readonly palletsUnloaded: CodecTypes['pg/int4@1']['input'];
       readonly forkliftUsed: CodecTypes['pg/bool@1']['input'];
       readonly forkliftName: CodecTypes['pg/text@1']['input'] | null;
-      readonly forkliftSafetyCheckedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly forkliftSafetyActorId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly forkliftSafetyNotes: CodecTypes['pg/text@1']['input'] | null;
       readonly dockDoor: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -1026,10 +874,6 @@ export type StorageColumnTypes = {
       readonly description: CodecTypes['pg/text@1']['output'] | null;
       readonly disposition: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['output'];
-      readonly labelStatus: CodecTypes['pg/text@1']['output'];
       readonly manufacturer: CodecTypes['pg/text@1']['output'] | null;
       readonly model: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
@@ -1037,7 +881,6 @@ export type StorageColumnTypes = {
       readonly palletId: CodecTypes['pg/int4@1']['output'] | null;
       readonly processedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly processingStatus: CodecTypes['pg/text@1']['output'];
-      readonly publicUid: CodecTypes['pg/text@1']['output'] | null;
       readonly serialNumber: CodecTypes['pg/text@1']['output'] | null;
       readonly sku: CodecTypes['pg/text@1']['output'] | null;
       readonly sourcePalletId: CodecTypes['pg/int4@1']['output'] | null;
@@ -1158,92 +1001,24 @@ export type StorageColumnTypes = {
       readonly saleId: CodecTypes['pg/int4@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
-    readonly supplier: {
-      readonly addressLine1: CodecTypes['pg/text@1']['output'] | null;
-      readonly addressLine2: CodecTypes['pg/text@1']['output'] | null;
-      readonly city: CodecTypes['pg/text@1']['output'] | null;
-      readonly contactName: CodecTypes['pg/text@1']['output'] | null;
-      readonly country: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly email: CodecTypes['pg/text@1']['output'] | null;
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly isActive: CodecTypes['pg/bool@1']['output'];
-      readonly legalName: CodecTypes['pg/text@1']['output'] | null;
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly organizationId: CodecTypes['pg/int4@1']['output'];
-      readonly paymentInstructions: CodecTypes['pg/text@1']['output'] | null;
-      readonly phone: CodecTypes['pg/text@1']['output'] | null;
-      readonly postalCode: CodecTypes['pg/text@1']['output'] | null;
-      readonly stateRegion: CodecTypes['pg/text@1']['output'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
     readonly truckload: {
       readonly amountPaid: CodecTypes['pg/numeric@1']['output'];
-      readonly carrier: CodecTypes['pg/text@1']['output'] | null;
       readonly code: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly destination: CodecTypes['pg/text@1']['output'];
-      readonly estimatedArrival: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly estimatedPieces: CodecTypes['pg/int4@1']['output'] | null;
       readonly freight: CodecTypes['pg/numeric@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly locationId: CodecTypes['pg/int4@1']['output'] | null;
       readonly organizationId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly origin: CodecTypes['pg/text@1']['output'] | null;
       readonly pallets: CodecTypes['pg/int4@1']['output'];
       readonly paymentCountry: CodecTypes['pg/text@1']['output'] | null;
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly paymentMethod: CodecTypes['pg/text@1']['output'];
       readonly paymentStatus: CodecTypes['pg/text@1']['output'];
-      readonly processingMode: CodecTypes['pg/text@1']['output'] | null;
       readonly purchase: CodecTypes['pg/numeric@1']['output'];
-      readonly purchaseDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly retailer: CodecTypes['pg/text@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly supplier: CodecTypes['pg/text@1']['output'];
-      readonly supplierId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly supplierReference: CodecTypes['pg/text@1']['output'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
-    readonly truckloadCost: {
-      readonly amount: CodecTypes['pg/numeric@1']['output'];
-      readonly costType: CodecTypes['pg/text@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly incurredAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly reference: CodecTypes['pg/text@1']['output'] | null;
-      readonly status: CodecTypes['pg/text@1']['output'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly vendorName: CodecTypes['pg/text@1']['output'] | null;
-    };
-    readonly truckloadOperationCheckIn: {
-      readonly actorId: CodecTypes['pg/int4@1']['output'];
-      readonly checkedInAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly checkedOutAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly receivingId: CodecTypes['pg/int4@1']['output'];
-      readonly role: CodecTypes['pg/text@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
-    readonly truckloadPayment: {
-      readonly amount: CodecTypes['pg/numeric@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly currency: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly method: CodecTypes['pg/text@1']['output'];
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly obligationType: CodecTypes['pg/text@1']['output'];
-      readonly paidAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly payeeName: CodecTypes['pg/text@1']['output'] | null;
-      readonly reference: CodecTypes['pg/text@1']['output'] | null;
-      readonly status: CodecTypes['pg/text@1']['output'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
     readonly truckReceiving: {
@@ -1256,9 +1031,6 @@ export type StorageColumnTypes = {
       readonly driverName: CodecTypes['pg/text@1']['output'] | null;
       readonly driverPhone: CodecTypes['pg/text@1']['output'] | null;
       readonly forkliftName: CodecTypes['pg/text@1']['output'] | null;
-      readonly forkliftSafetyActorId: CodecTypes['pg/int4@1']['output'] | null;
-      readonly forkliftSafetyCheckedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly forkliftSafetyNotes: CodecTypes['pg/text@1']['output'] | null;
       readonly forkliftUsed: CodecTypes['pg/bool@1']['output'];
       readonly freightCost: CodecTypes['pg/numeric@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
@@ -1377,10 +1149,6 @@ export type StorageColumnInputTypes = {
       readonly description: CodecTypes['pg/text@1']['input'] | null;
       readonly disposition: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['input'];
-      readonly labelStatus: CodecTypes['pg/text@1']['input'];
       readonly manufacturer: CodecTypes['pg/text@1']['input'] | null;
       readonly model: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
@@ -1388,7 +1156,6 @@ export type StorageColumnInputTypes = {
       readonly palletId: CodecTypes['pg/int4@1']['input'] | null;
       readonly processedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly processingStatus: CodecTypes['pg/text@1']['input'];
-      readonly publicUid: CodecTypes['pg/text@1']['input'] | null;
       readonly serialNumber: CodecTypes['pg/text@1']['input'] | null;
       readonly sku: CodecTypes['pg/text@1']['input'] | null;
       readonly sourcePalletId: CodecTypes['pg/int4@1']['input'] | null;
@@ -1509,92 +1276,24 @@ export type StorageColumnInputTypes = {
       readonly saleId: CodecTypes['pg/int4@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
-    readonly supplier: {
-      readonly addressLine1: CodecTypes['pg/text@1']['input'] | null;
-      readonly addressLine2: CodecTypes['pg/text@1']['input'] | null;
-      readonly city: CodecTypes['pg/text@1']['input'] | null;
-      readonly contactName: CodecTypes['pg/text@1']['input'] | null;
-      readonly country: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly email: CodecTypes['pg/text@1']['input'] | null;
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly isActive: CodecTypes['pg/bool@1']['input'];
-      readonly legalName: CodecTypes['pg/text@1']['input'] | null;
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly organizationId: CodecTypes['pg/int4@1']['input'];
-      readonly paymentInstructions: CodecTypes['pg/text@1']['input'] | null;
-      readonly phone: CodecTypes['pg/text@1']['input'] | null;
-      readonly postalCode: CodecTypes['pg/text@1']['input'] | null;
-      readonly stateRegion: CodecTypes['pg/text@1']['input'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
     readonly truckload: {
       readonly amountPaid: CodecTypes['pg/numeric@1']['input'];
-      readonly carrier: CodecTypes['pg/text@1']['input'] | null;
       readonly code: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly destination: CodecTypes['pg/text@1']['input'];
-      readonly estimatedArrival: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly estimatedPieces: CodecTypes['pg/int4@1']['input'] | null;
       readonly freight: CodecTypes['pg/numeric@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly locationId: CodecTypes['pg/int4@1']['input'] | null;
       readonly organizationId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly origin: CodecTypes['pg/text@1']['input'] | null;
       readonly pallets: CodecTypes['pg/int4@1']['input'];
       readonly paymentCountry: CodecTypes['pg/text@1']['input'] | null;
       readonly paymentDueDate: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly paymentMethod: CodecTypes['pg/text@1']['input'];
       readonly paymentStatus: CodecTypes['pg/text@1']['input'];
-      readonly processingMode: CodecTypes['pg/text@1']['input'] | null;
       readonly purchase: CodecTypes['pg/numeric@1']['input'];
-      readonly purchaseDate: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly retailer: CodecTypes['pg/text@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly supplier: CodecTypes['pg/text@1']['input'];
-      readonly supplierId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly supplierReference: CodecTypes['pg/text@1']['input'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly truckloadCost: {
-      readonly amount: CodecTypes['pg/numeric@1']['input'];
-      readonly costType: CodecTypes['pg/text@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly incurredAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly reference: CodecTypes['pg/text@1']['input'] | null;
-      readonly status: CodecTypes['pg/text@1']['input'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly vendorName: CodecTypes['pg/text@1']['input'] | null;
-    };
-    readonly truckloadOperationCheckIn: {
-      readonly actorId: CodecTypes['pg/int4@1']['input'];
-      readonly checkedInAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly checkedOutAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly receivingId: CodecTypes['pg/int4@1']['input'];
-      readonly role: CodecTypes['pg/text@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly truckloadPayment: {
-      readonly amount: CodecTypes['pg/numeric@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly method: CodecTypes['pg/text@1']['input'];
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly obligationType: CodecTypes['pg/text@1']['input'];
-      readonly paidAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly payeeName: CodecTypes['pg/text@1']['input'] | null;
-      readonly reference: CodecTypes['pg/text@1']['input'] | null;
-      readonly status: CodecTypes['pg/text@1']['input'];
-      readonly truckloadId: CodecTypes['pg/int4@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly truckReceiving: {
@@ -1607,9 +1306,6 @@ export type StorageColumnInputTypes = {
       readonly driverName: CodecTypes['pg/text@1']['input'] | null;
       readonly driverPhone: CodecTypes['pg/text@1']['input'] | null;
       readonly forkliftName: CodecTypes['pg/text@1']['input'] | null;
-      readonly forkliftSafetyActorId: CodecTypes['pg/int4@1']['input'] | null;
-      readonly forkliftSafetyCheckedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly forkliftSafetyNotes: CodecTypes['pg/text@1']['input'] | null;
       readonly forkliftUsed: CodecTypes['pg/bool@1']['input'];
       readonly freightCost: CodecTypes['pg/numeric@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
@@ -1662,10 +1358,9 @@ export namespace Models {
     locations: public_Location[];
     memberships: public_OrganizationMembership[];
     sales: public_Sale[];
-    suppliers: public_Supplier[];
     truckloads: public_Truckload[];
     readonly [RelationKeys]?:
-      'actors' | 'events' | 'locations' | 'memberships' | 'sales' | 'suppliers' | 'truckloads';
+      'actors' | 'events' | 'locations' | 'memberships' | 'sales' | 'truckloads';
   };
   export type public_OrganizationMembership = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -1776,48 +1471,17 @@ export namespace Models {
     organization: public_Organization | null;
     readonly [RelationKeys]?: 'actor' | 'location' | 'organization';
   };
-  export type public_Supplier = {
-    id: CodecTypes['pg/int4@1']['output'];
-    organizationId: CodecTypes['pg/int4@1']['output'];
-    name: CodecTypes['pg/text@1']['output'];
-    legalName: CodecTypes['pg/text@1']['output'] | null;
-    contactName: CodecTypes['pg/text@1']['output'] | null;
-    email: CodecTypes['pg/text@1']['output'] | null;
-    phone: CodecTypes['pg/text@1']['output'] | null;
-    addressLine1: CodecTypes['pg/text@1']['output'] | null;
-    addressLine2: CodecTypes['pg/text@1']['output'] | null;
-    city: CodecTypes['pg/text@1']['output'] | null;
-    stateRegion: CodecTypes['pg/text@1']['output'] | null;
-    postalCode: CodecTypes['pg/text@1']['output'] | null;
-    country: CodecTypes['pg/text@1']['output'] | null;
-    paymentInstructions: CodecTypes['pg/text@1']['output'] | null;
-    notes: CodecTypes['pg/text@1']['output'] | null;
-    isActive: CodecTypes['pg/bool@1']['output'];
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    organization: public_Organization;
-    truckloads: public_Truckload[];
-    readonly [RelationKeys]?: 'organization' | 'truckloads';
-  };
   export type public_Truckload = {
     id: CodecTypes['pg/int4@1']['output'];
     code: CodecTypes['pg/text@1']['output'];
     organizationId: CodecTypes['pg/int4@1']['output'] | null;
     locationId: CodecTypes['pg/int4@1']['output'] | null;
-    supplierId: CodecTypes['pg/int4@1']['output'] | null;
     supplier: CodecTypes['pg/text@1']['output'];
     retailer: CodecTypes['pg/text@1']['output'];
     pallets: CodecTypes['pg/int4@1']['output'];
     purchase: CodecTypes['pg/numeric@1']['output'];
     freight: CodecTypes['pg/numeric@1']['output'];
     destination: CodecTypes['pg/text@1']['output'];
-    supplierReference: CodecTypes['pg/text@1']['output'] | null;
-    purchaseDate: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    origin: CodecTypes['pg/text@1']['output'] | null;
-    estimatedPieces: CodecTypes['pg/int4@1']['output'] | null;
-    carrier: CodecTypes['pg/text@1']['output'] | null;
-    estimatedArrival: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    processingMode: CodecTypes['pg/text@1']['output'] | null;
     status: CodecTypes['pg/text@1']['output'];
     paymentMethod: CodecTypes['pg/text@1']['output'];
     paymentStatus: CodecTypes['pg/text@1']['output'];
@@ -1826,56 +1490,12 @@ export namespace Models {
     paymentCountry: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    costs: public_TruckloadCost[];
     location: public_Location | null;
     organization: public_Organization | null;
     palletRecords: public_Pallet[];
-    procurementPayments: public_TruckloadPayment[];
     receiving: public_TruckReceiving | null;
     sales: public_Sale[];
-    supplierRecord: public_Supplier | null;
-    readonly [RelationKeys]?:
-      | 'costs'
-      | 'location'
-      | 'organization'
-      | 'palletRecords'
-      | 'procurementPayments'
-      | 'receiving'
-      | 'sales'
-      | 'supplierRecord';
-  };
-  export type public_TruckloadCost = {
-    id: CodecTypes['pg/int4@1']['output'];
-    truckloadId: CodecTypes['pg/int4@1']['output'];
-    costType: CodecTypes['pg/text@1']['output'];
-    amount: CodecTypes['pg/numeric@1']['output'];
-    currency: CodecTypes['pg/text@1']['output'];
-    status: CodecTypes['pg/text@1']['output'];
-    vendorName: CodecTypes['pg/text@1']['output'] | null;
-    reference: CodecTypes['pg/text@1']['output'] | null;
-    notes: CodecTypes['pg/text@1']['output'] | null;
-    incurredAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    truckload: public_Truckload;
-    readonly [RelationKeys]?: 'truckload';
-  };
-  export type public_TruckloadPayment = {
-    id: CodecTypes['pg/int4@1']['output'];
-    truckloadId: CodecTypes['pg/int4@1']['output'];
-    obligationType: CodecTypes['pg/text@1']['output'];
-    amount: CodecTypes['pg/numeric@1']['output'];
-    currency: CodecTypes['pg/text@1']['output'];
-    method: CodecTypes['pg/text@1']['output'];
-    status: CodecTypes['pg/text@1']['output'];
-    payeeName: CodecTypes['pg/text@1']['output'] | null;
-    reference: CodecTypes['pg/text@1']['output'] | null;
-    notes: CodecTypes['pg/text@1']['output'] | null;
-    paidAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    truckload: public_Truckload;
-    readonly [RelationKeys]?: 'truckload';
+    readonly [RelationKeys]?: 'location' | 'organization' | 'palletRecords' | 'receiving' | 'sales';
   };
   export type public_Pallet = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -1903,11 +1523,6 @@ export namespace Models {
   export type public_InventoryUnit = {
     id: CodecTypes['pg/int4@1']['output'];
     unitId: CodecTypes['pg/text@1']['output'];
-    publicUid: CodecTypes['pg/text@1']['output'] | null;
-    labelStatus: CodecTypes['pg/text@1']['output'];
-    labelPrintCount: CodecTypes['pg/int4@1']['output'];
-    labeledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    identifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     organizationId: CodecTypes['pg/int4@1']['output'];
     truckloadId: CodecTypes['pg/int4@1']['output'];
     palletId: CodecTypes['pg/int4@1']['output'] | null;
@@ -1962,31 +1577,13 @@ export namespace Models {
     palletsUnloaded: CodecTypes['pg/int4@1']['output'];
     forkliftUsed: CodecTypes['pg/bool@1']['output'];
     forkliftName: CodecTypes['pg/text@1']['output'] | null;
-    forkliftSafetyCheckedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    forkliftSafetyActorId: CodecTypes['pg/int4@1']['output'] | null;
-    forkliftSafetyNotes: CodecTypes['pg/text@1']['output'] | null;
     dockDoor: CodecTypes['pg/text@1']['output'] | null;
     notes: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    operationCheckIns: public_TruckloadOperationCheckIn[];
     truckload: public_Truckload;
     workers: public_UnloadingWorker[];
-    readonly [RelationKeys]?: 'operationCheckIns' | 'truckload' | 'workers';
-  };
-  export type public_TruckloadOperationCheckIn = {
-    id: CodecTypes['pg/int4@1']['output'];
-    receivingId: CodecTypes['pg/int4@1']['output'];
-    actorId: CodecTypes['pg/int4@1']['output'];
-    role: CodecTypes['pg/text@1']['output'];
-    checkedInAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    checkedOutAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    notes: CodecTypes['pg/text@1']['output'] | null;
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    actor: public_Actor;
-    receiving: public_TruckReceiving;
-    readonly [RelationKeys]?: 'actor' | 'receiving';
+    readonly [RelationKeys]?: 'truckload' | 'workers';
   };
   export type public_UnloadingWorker = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -2082,14 +1679,10 @@ export declare const models: {
     AuthAccount: Models.public_AuthAccount;
     AuthSession: Models.public_AuthSession;
     KernelEvent: Models.public_KernelEvent;
-    Supplier: Models.public_Supplier;
     Truckload: Models.public_Truckload;
-    TruckloadCost: Models.public_TruckloadCost;
-    TruckloadPayment: Models.public_TruckloadPayment;
     Pallet: Models.public_Pallet;
     InventoryUnit: Models.public_InventoryUnit;
     TruckReceiving: Models.public_TruckReceiving;
-    TruckloadOperationCheckIn: Models.public_TruckloadOperationCheckIn;
     UnloadingWorker: Models.public_UnloadingWorker;
     Sale: Models.public_Sale;
     SalePayment: Models.public_SalePayment;
@@ -2663,39 +2256,6 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
-                readonly publicUid: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly labelStatus: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'PENDING'>;
-                  };
-                };
-                readonly labelPrintCount: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
-                  };
-                };
-                readonly labeledAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly identifiedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
                 readonly organizationId: {
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
@@ -2857,7 +2417,6 @@ type ContractBase = Omit<
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [
                 { readonly columns: readonly ['unitId'] },
-                { readonly columns: readonly ['publicUid'] },
                 { readonly columns: readonly ['truckloadId', 'unitNumber'] },
               ];
               indexes: readonly [
@@ -2865,18 +2424,6 @@ type ContractBase = Omit<
                   readonly name: 'inventoryUnit_organizationId_idx_2e17ef41';
                   readonly prefix: 'inventoryUnit_organizationId_idx';
                   readonly columns: readonly ['organizationId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_publicUid_idx_2beee8e8';
-                  readonly prefix: 'inventoryUnit_publicUid_idx';
-                  readonly columns: readonly ['publicUid'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_labelStatus_idx_d475cb83';
-                  readonly prefix: 'inventoryUnit_labelStatus_idx';
-                  readonly columns: readonly ['labelStatus'];
                   readonly unique: false;
                 },
                 {
@@ -3834,139 +3381,6 @@ type ContractBase = Omit<
                 },
               ];
             };
-            readonly supplier: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: 'autoincrement()';
-                  };
-                };
-                readonly organizationId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly name: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly legalName: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly contactName: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly email: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly phone: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly addressLine1: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly addressLine2: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly city: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly stateRegion: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly postalCode: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly country: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly paymentInstructions: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly notes: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly isActive: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
-                  };
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['organizationId', 'name'] }];
-              indexes: readonly [
-                {
-                  readonly name: 'supplier_organizationId_idx_2e17ef41';
-                  readonly prefix: 'supplier_organizationId_idx';
-                  readonly columns: readonly ['organizationId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'supplier_isActive_idx_77fe3ba1';
-                  readonly prefix: 'supplier_isActive_idx';
-                  readonly columns: readonly ['isActive'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'supplier';
-                    readonly columns: readonly ['organizationId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'organization';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
             readonly truckload: {
               columns: {
                 readonly id: {
@@ -3989,11 +3403,6 @@ type ContractBase = Omit<
                   readonly nullable: true;
                 };
                 readonly locationId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly supplierId: {
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: true;
@@ -4027,41 +3436,6 @@ type ContractBase = Omit<
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
-                };
-                readonly supplierReference: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly purchaseDate: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly origin: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly estimatedPieces: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly carrier: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly estimatedArrival: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly processingMode: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
                 };
                 readonly status: {
                   readonly nativeType: 'text';
@@ -4132,12 +3506,6 @@ type ContractBase = Omit<
                   readonly columns: readonly ['locationId'];
                   readonly unique: false;
                 },
-                {
-                  readonly name: 'truckload_supplierId_idx_c4d9a8b9';
-                  readonly prefix: 'truckload_supplierId_idx';
-                  readonly columns: readonly ['supplierId'];
-                  readonly unique: false;
-                },
               ];
               foreignKeys: readonly [
                 {
@@ -4161,370 +3529,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'location';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckload';
-                    readonly columns: readonly ['supplierId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'supplier';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly truckloadCost: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: 'autoincrement()';
-                  };
-                };
-                readonly truckloadId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly costType: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly amount: {
-                  readonly nativeType: 'numeric';
-                  readonly codecId: 'pg/numeric@1';
-                  readonly nullable: false;
-                };
-                readonly currency: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'USD'>;
-                  };
-                };
-                readonly status: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'CONFIRMED'>;
-                  };
-                };
-                readonly vendorName: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly reference: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly notes: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly incurredAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'truckloadCost_truckloadId_idx_6430a1ac';
-                  readonly prefix: 'truckloadCost_truckloadId_idx';
-                  readonly columns: readonly ['truckloadId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadCost_costType_idx_ba55e148';
-                  readonly prefix: 'truckloadCost_costType_idx';
-                  readonly columns: readonly ['costType'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadCost_status_idx_e98638ab';
-                  readonly prefix: 'truckloadCost_status_idx';
-                  readonly columns: readonly ['status'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadCost_incurredAt_idx_bed9e0e8';
-                  readonly prefix: 'truckloadCost_incurredAt_idx';
-                  readonly columns: readonly ['incurredAt'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckloadCost';
-                    readonly columns: readonly ['truckloadId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckload';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly truckloadOperationCheckIn: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: 'autoincrement()';
-                  };
-                };
-                readonly receivingId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly actorId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly role: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly checkedInAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly checkedOutAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly notes: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'truckloadOperationCheckIn_receivingId_idx_986e9fc5';
-                  readonly prefix: 'truckloadOperationCheckIn_receivingId_idx';
-                  readonly columns: readonly ['receivingId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadOperationCheckIn_actorId_idx_a58f6b4b';
-                  readonly prefix: 'truckloadOperationCheckIn_actorId_idx';
-                  readonly columns: readonly ['actorId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadOperationCheckIn_checkedInAt_idx_7792c78f';
-                  readonly prefix: 'truckloadOperationCheckIn_checkedInAt_idx';
-                  readonly columns: readonly ['checkedInAt'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckloadOperationCheckIn';
-                    readonly columns: readonly ['receivingId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckReceiving';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckloadOperationCheckIn';
-                    readonly columns: readonly ['actorId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'actor';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly truckloadPayment: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: 'autoincrement()';
-                  };
-                };
-                readonly truckloadId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly obligationType: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly amount: {
-                  readonly nativeType: 'numeric';
-                  readonly codecId: 'pg/numeric@1';
-                  readonly nullable: false;
-                };
-                readonly currency: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'USD'>;
-                  };
-                };
-                readonly method: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'Unspecified'>;
-                  };
-                };
-                readonly status: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'CONFIRMED'>;
-                  };
-                };
-                readonly payeeName: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly reference: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly notes: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly paidAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'truckloadPayment_truckloadId_idx_6430a1ac';
-                  readonly prefix: 'truckloadPayment_truckloadId_idx';
-                  readonly columns: readonly ['truckloadId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadPayment_obligationType_idx_f2e07e55';
-                  readonly prefix: 'truckloadPayment_obligationType_idx';
-                  readonly columns: readonly ['obligationType'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadPayment_status_idx_e98638ab';
-                  readonly prefix: 'truckloadPayment_status_idx';
-                  readonly columns: readonly ['status'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'truckloadPayment_paidAt_idx_dbfd0b83';
-                  readonly prefix: 'truckloadPayment_paidAt_idx';
-                  readonly columns: readonly ['paidAt'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckloadPayment';
-                    readonly columns: readonly ['truckloadId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'truckload';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -4655,21 +3659,6 @@ type ContractBase = Omit<
                   };
                 };
                 readonly forkliftName: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly forkliftSafetyCheckedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly forkliftSafetyActorId: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly forkliftSafetyNotes: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
@@ -4855,16 +3844,7 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'KernelEvent';
     };
-    readonly supplier: { readonly namespace: 'public' & NamespaceId; readonly model: 'Supplier' };
     readonly truckload: { readonly namespace: 'public' & NamespaceId; readonly model: 'Truckload' };
-    readonly truckloadCost: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'TruckloadCost';
-    };
-    readonly truckloadPayment: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'TruckloadPayment';
-    };
     readonly pallet: { readonly namespace: 'public' & NamespaceId; readonly model: 'Pallet' };
     readonly inventoryUnit: {
       readonly namespace: 'public' & NamespaceId;
@@ -4873,10 +3853,6 @@ type ContractBase = Omit<
     readonly truckReceiving: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'TruckReceiving';
-    };
-    readonly truckloadOperationCheckIn: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'TruckloadOperationCheckIn';
     };
     readonly unloadingWorker: {
       readonly namespace: 'public' & NamespaceId;
@@ -5398,32 +4374,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly publicUid: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly labelStatus: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly labelPrintCount: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly labeledAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly identifiedAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
               readonly organizationId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -5553,11 +4503,6 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly id: { readonly column: 'id' };
                 readonly unitId: { readonly column: 'unitId' };
-                readonly publicUid: { readonly column: 'publicUid' };
-                readonly labelStatus: { readonly column: 'labelStatus' };
-                readonly labelPrintCount: { readonly column: 'labelPrintCount' };
-                readonly labeledAt: { readonly column: 'labeledAt' };
-                readonly identifiedAt: { readonly column: 'identifiedAt' };
                 readonly organizationId: { readonly column: 'organizationId' };
                 readonly truckloadId: { readonly column: 'truckloadId' };
                 readonly palletId: { readonly column: 'palletId' };
@@ -5939,17 +4884,6 @@ type ContractBase = Omit<
               };
               readonly sales: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Sale' };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['organizationId'];
-                };
-              };
-              readonly suppliers: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Supplier';
-                };
                 readonly cardinality: '1:N';
                 readonly on: {
                   readonly localFields: readonly ['id'];
@@ -6435,137 +5369,6 @@ type ContractBase = Omit<
               };
             };
           };
-          readonly Supplier: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly organizationId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly name: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly legalName: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly contactName: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly email: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly phone: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly addressLine1: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly addressLine2: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly city: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly stateRegion: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly postalCode: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly country: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly paymentInstructions: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly notes: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly isActive: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: {
-              readonly organization: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Organization';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['organizationId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly truckloads: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Truckload';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['supplierId'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'supplier';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly organizationId: { readonly column: 'organizationId' };
-                readonly name: { readonly column: 'name' };
-                readonly legalName: { readonly column: 'legalName' };
-                readonly contactName: { readonly column: 'contactName' };
-                readonly email: { readonly column: 'email' };
-                readonly phone: { readonly column: 'phone' };
-                readonly addressLine1: { readonly column: 'addressLine1' };
-                readonly addressLine2: { readonly column: 'addressLine2' };
-                readonly city: { readonly column: 'city' };
-                readonly stateRegion: { readonly column: 'stateRegion' };
-                readonly postalCode: { readonly column: 'postalCode' };
-                readonly country: { readonly column: 'country' };
-                readonly paymentInstructions: { readonly column: 'paymentInstructions' };
-                readonly notes: { readonly column: 'notes' };
-                readonly isActive: { readonly column: 'isActive' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
           readonly Truckload: {
             readonly fields: {
               readonly id: {
@@ -6581,10 +5384,6 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
               readonly locationId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly supplierId: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
@@ -6610,40 +5409,6 @@ type ContractBase = Omit<
               };
               readonly destination: {
                 readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly supplierReference: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly purchaseDate: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly origin: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly estimatedPieces: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly carrier: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly estimatedArrival: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly processingMode: {
-                readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly status: {
@@ -6689,17 +5454,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly costs: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'TruckloadCost';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['truckloadId'];
-                };
-              };
               readonly location: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -6735,17 +5489,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['truckloadId'];
                 };
               };
-              readonly procurementPayments: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'TruckloadPayment';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['truckloadId'];
-                };
-              };
               readonly receiving: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -6766,18 +5509,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['truckloadId'];
                 };
               };
-              readonly supplierRecord: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Supplier';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: true;
-                readonly on: {
-                  readonly localFields: readonly ['supplierId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
             };
             readonly storage: {
               readonly table: 'truckload';
@@ -6787,310 +5518,18 @@ type ContractBase = Omit<
                 readonly code: { readonly column: 'code' };
                 readonly organizationId: { readonly column: 'organizationId' };
                 readonly locationId: { readonly column: 'locationId' };
-                readonly supplierId: { readonly column: 'supplierId' };
                 readonly supplier: { readonly column: 'supplier' };
                 readonly retailer: { readonly column: 'retailer' };
                 readonly pallets: { readonly column: 'pallets' };
                 readonly purchase: { readonly column: 'purchase' };
                 readonly freight: { readonly column: 'freight' };
                 readonly destination: { readonly column: 'destination' };
-                readonly supplierReference: { readonly column: 'supplierReference' };
-                readonly purchaseDate: { readonly column: 'purchaseDate' };
-                readonly origin: { readonly column: 'origin' };
-                readonly estimatedPieces: { readonly column: 'estimatedPieces' };
-                readonly carrier: { readonly column: 'carrier' };
-                readonly estimatedArrival: { readonly column: 'estimatedArrival' };
-                readonly processingMode: { readonly column: 'processingMode' };
                 readonly status: { readonly column: 'status' };
                 readonly paymentMethod: { readonly column: 'paymentMethod' };
                 readonly paymentStatus: { readonly column: 'paymentStatus' };
                 readonly amountPaid: { readonly column: 'amountPaid' };
                 readonly paymentDueDate: { readonly column: 'paymentDueDate' };
                 readonly paymentCountry: { readonly column: 'paymentCountry' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly TruckloadCost: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly truckloadId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly costType: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly amount: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
-              };
-              readonly currency: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly status: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly vendorName: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly reference: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly notes: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly incurredAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: {
-              readonly truckload: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Truckload';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['truckloadId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'truckloadCost';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly truckloadId: { readonly column: 'truckloadId' };
-                readonly costType: { readonly column: 'costType' };
-                readonly amount: { readonly column: 'amount' };
-                readonly currency: { readonly column: 'currency' };
-                readonly status: { readonly column: 'status' };
-                readonly vendorName: { readonly column: 'vendorName' };
-                readonly reference: { readonly column: 'reference' };
-                readonly notes: { readonly column: 'notes' };
-                readonly incurredAt: { readonly column: 'incurredAt' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly TruckloadOperationCheckIn: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly receivingId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly actorId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly role: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly checkedInAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly checkedOutAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly notes: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: {
-              readonly actor: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Actor';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['actorId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly receiving: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'TruckReceiving';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['receivingId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'truckloadOperationCheckIn';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly receivingId: { readonly column: 'receivingId' };
-                readonly actorId: { readonly column: 'actorId' };
-                readonly role: { readonly column: 'role' };
-                readonly checkedInAt: { readonly column: 'checkedInAt' };
-                readonly checkedOutAt: { readonly column: 'checkedOutAt' };
-                readonly notes: { readonly column: 'notes' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly TruckloadPayment: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly truckloadId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly obligationType: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly amount: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
-              };
-              readonly currency: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly method: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly status: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly payeeName: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly reference: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly notes: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly paidAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: {
-              readonly truckload: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Truckload';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['truckloadId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'truckloadPayment';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly truckloadId: { readonly column: 'truckloadId' };
-                readonly obligationType: { readonly column: 'obligationType' };
-                readonly amount: { readonly column: 'amount' };
-                readonly currency: { readonly column: 'currency' };
-                readonly method: { readonly column: 'method' };
-                readonly status: { readonly column: 'status' };
-                readonly payeeName: { readonly column: 'payeeName' };
-                readonly reference: { readonly column: 'reference' };
-                readonly notes: { readonly column: 'notes' };
-                readonly paidAt: { readonly column: 'paidAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -7199,21 +5638,6 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly forkliftSafetyCheckedAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly forkliftSafetyActorId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly forkliftSafetyNotes: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
               readonly dockDoor: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -7238,17 +5662,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly operationCheckIns: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'TruckloadOperationCheckIn';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['receivingId'];
-                };
-              };
               readonly truckload: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -7300,9 +5713,6 @@ type ContractBase = Omit<
                 readonly palletsUnloaded: { readonly column: 'palletsUnloaded' };
                 readonly forkliftUsed: { readonly column: 'forkliftUsed' };
                 readonly forkliftName: { readonly column: 'forkliftName' };
-                readonly forkliftSafetyCheckedAt: { readonly column: 'forkliftSafetyCheckedAt' };
-                readonly forkliftSafetyActorId: { readonly column: 'forkliftSafetyActorId' };
-                readonly forkliftSafetyNotes: { readonly column: 'forkliftSafetyNotes' };
                 readonly dockDoor: { readonly column: 'dockDoor' };
                 readonly notes: { readonly column: 'notes' };
                 readonly createdAt: { readonly column: 'createdAt' };
@@ -7542,43 +5952,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'public';
-            readonly table: 'supplier';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
             readonly table: 'truckload';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'truckloadCost';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'truckloadOperationCheckIn';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'truckloadPayment';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };

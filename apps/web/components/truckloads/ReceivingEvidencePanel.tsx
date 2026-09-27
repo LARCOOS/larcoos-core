@@ -14,6 +14,9 @@ type EvidenceAsset = {
 type Props = {
   truckloadId: number;
   truckloadCode: string;
+  onCategoriesChange?: (categories: string[]) => void;
+  requestCategory?: string | null;
+  onRequestHandled?: () => void;
 };
 
 const RECEIVING_EVIDENCE = [
@@ -32,6 +35,9 @@ const RECEIVING_EVIDENCE = [
 export default function ReceivingEvidencePanel({
   truckloadId,
   truckloadCode,
+  onCategoriesChange,
+  requestCategory,
+  onRequestHandled,
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [evidence, setEvidence] = useState<EvidenceAsset[]>([]);
@@ -56,7 +62,17 @@ export default function ReceivingEvidencePanel({
         throw new Error(data.error ?? "Could not load receiving evidence");
       }
 
-      setEvidence(Array.isArray(data.evidence) ? data.evidence : []);
+      const nextEvidence = Array.isArray(data.evidence)
+        ? (data.evidence as EvidenceAsset[])
+        : [];
+
+      setEvidence(nextEvidence);
+
+      onCategoriesChange?.(
+        Array.from(
+          new Set(nextEvidence.map((asset) => asset.category))
+        )
+      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -66,7 +82,7 @@ export default function ReceivingEvidencePanel({
     } finally {
       setLoading(false);
     }
-  }, [truckloadId]);
+  }, [truckloadId, onCategoriesChange]);
 
   useEffect(() => {
     void loadEvidence();
@@ -78,6 +94,23 @@ export default function ReceivingEvidencePanel({
     setTimeout(() => inputRef.current?.click(), 0);
   }
 
+  useEffect(() => {
+    if (!requestCategory || uploading) {
+      return;
+    }
+
+    const validCategory = RECEIVING_EVIDENCE.some(
+      (item) => item[0] === requestCategory
+    );
+
+    if (!validCategory) {
+      onRequestHandled?.();
+      return;
+    }
+
+    chooseFile(requestCategory);
+    onRequestHandled?.();
+  }, [requestCategory, uploading, onRequestHandled]);
   async function uploadFile(file: File) {
     setUploading(true);
     setError("");

@@ -68,6 +68,10 @@
       "model": "TruckloadCost",
       "namespace": "public"
     },
+    "truckloadOperationCheckIn": {
+      "model": "TruckloadOperationCheckIn",
+      "namespace": "public"
+    },
     "truckloadPayment": {
       "model": "TruckloadPayment",
       "namespace": "public"
@@ -948,6 +952,34 @@
                   "kind": "scalar"
                 }
               },
+              "identifiedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "labelPrintCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "labelStatus": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "labeledAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "manufacturer": {
                 "nullable": true,
                 "type": {
@@ -992,6 +1024,13 @@
               },
               "processingStatus": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "publicUid": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -1114,6 +1153,18 @@
                 "id": {
                   "column": "id"
                 },
+                "identifiedAt": {
+                  "column": "identifiedAt"
+                },
+                "labelPrintCount": {
+                  "column": "labelPrintCount"
+                },
+                "labelStatus": {
+                  "column": "labelStatus"
+                },
+                "labeledAt": {
+                  "column": "labeledAt"
+                },
                 "manufacturer": {
                   "column": "manufacturer"
                 },
@@ -1134,6 +1185,9 @@
                 },
                 "processingStatus": {
                   "column": "processingStatus"
+                },
+                "publicUid": {
+                  "column": "publicUid"
                 },
                 "serialNumber": {
                   "column": "serialNumber"
@@ -2826,6 +2880,27 @@
                   "kind": "scalar"
                 }
               },
+              "forkliftSafetyActorId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "forkliftSafetyCheckedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "forkliftSafetyNotes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "forkliftUsed": {
                 "nullable": false,
                 "type": {
@@ -2954,6 +3029,21 @@
               }
             },
             "relations": {
+              "operationCheckIns": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "receivingId"
+                  ]
+                },
+                "to": {
+                  "model": "TruckloadOperationCheckIn",
+                  "namespace": "public"
+                }
+              },
               "truckload": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -3014,6 +3104,15 @@
                 },
                 "forkliftName": {
                   "column": "forkliftName"
+                },
+                "forkliftSafetyActorId": {
+                  "column": "forkliftSafetyActorId"
+                },
+                "forkliftSafetyCheckedAt": {
+                  "column": "forkliftSafetyCheckedAt"
+                },
+                "forkliftSafetyNotes": {
+                  "column": "forkliftSafetyNotes"
                 },
                 "forkliftUsed": {
                   "column": "forkliftUsed"
@@ -3616,6 +3715,140 @@
               },
               "namespaceId": "public",
               "table": "truckloadCost"
+            }
+          },
+          "TruckloadOperationCheckIn": {
+            "fields": {
+              "actorId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "checkedInAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "checkedOutAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "receivingId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "actor": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "actorId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Actor",
+                  "namespace": "public"
+                }
+              },
+              "receiving": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "receivingId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "TruckReceiving",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "actorId": {
+                  "column": "actorId"
+                },
+                "checkedInAt": {
+                  "column": "checkedInAt"
+                },
+                "checkedOutAt": {
+                  "column": "checkedOutAt"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "receivingId": {
+                  "column": "receivingId"
+                },
+                "role": {
+                  "column": "role"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "truckloadOperationCheckIn"
             }
           },
           "TruckloadPayment": {
@@ -4651,6 +4884,34 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "identifiedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "labelPrintCount": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "labelStatus": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PENDING"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "labeledAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "manufacturer": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -4689,6 +4950,11 @@
                   },
                   "nativeType": "text",
                   "nullable": false
+                },
+                "publicUid": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "serialNumber": {
                   "codecId": "pg/text@1",
@@ -4762,6 +5028,14 @@
                 },
                 {
                   "columns": [
+                    "labelStatus"
+                  ],
+                  "name": "inventoryUnit_labelStatus_idx_d475cb83",
+                  "prefix": "inventoryUnit_labelStatus_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
                     "organizationId"
                   ],
                   "name": "inventoryUnit_organizationId_idx_2e17ef41",
@@ -4782,6 +5056,14 @@
                   ],
                   "name": "inventoryUnit_processingStatus_idx_6f216ba4",
                   "prefix": "inventoryUnit_processingStatus_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "publicUid"
+                  ],
+                  "name": "inventoryUnit_publicUid_idx_2beee8e8",
+                  "prefix": "inventoryUnit_publicUid_idx",
                   "unique": false
                 },
                 {
@@ -4842,6 +5124,11 @@
                 {
                   "columns": [
                     "unitId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "publicUid"
                   ]
                 },
                 {
@@ -6147,6 +6434,21 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "forkliftSafetyActorId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "forkliftSafetyCheckedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "forkliftSafetyNotes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "forkliftUsed": {
                   "codecId": "pg/bool@1",
                   "default": {
@@ -6671,6 +6973,135 @@
               },
               "uniques": []
             },
+            "truckloadOperationCheckIn": {
+              "columns": {
+                "actorId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "checkedInAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "checkedOutAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "receivingId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "receivingId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "truckloadOperationCheckIn"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "truckReceiving"
+                  }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "actorId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "truckloadOperationCheckIn"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "actor"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "actorId"
+                  ],
+                  "name": "truckloadOperationCheckIn_actorId_idx_a58f6b4b",
+                  "prefix": "truckloadOperationCheckIn_actorId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "checkedInAt"
+                  ],
+                  "name": "truckloadOperationCheckIn_checkedInAt_idx_7792c78f",
+                  "prefix": "truckloadOperationCheckIn_checkedInAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "receivingId"
+                  ],
+                  "name": "truckloadOperationCheckIn_receivingId_idx_986e9fc5",
+                  "prefix": "truckloadOperationCheckIn_receivingId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "truckloadPayment": {
               "columns": {
                 "amount": {
@@ -6964,10 +7395,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "17438021cd36c12674320912f60a8a8f43b0c07eb7e2b9c20075822f3d204d0d"
+    "storageHash": "05e2da62be0f80c9687ce00202e747bdf0f5308fac555a3ae457037110318f0e"
   },
   "execution": {
-    "executionHash": "05758dc5dbdcece435641bce2a1588972d941e15608e186552e7b095f19297b0",
+    "executionHash": "dd9348fd100b63f5159d8005dd89b4ad74d1fadd6e2aba9b058e5e445b43487b",
     "mutations": {
       "defaults": [
         {
@@ -7178,6 +7609,21 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "truckloadCost"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "truckloadOperationCheckIn"
           }
         },
         {

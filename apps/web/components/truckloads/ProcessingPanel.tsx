@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import QRCode from "qrcode";
 
 type ProcessingPallet = {
   id: number;
@@ -28,6 +29,10 @@ type ProcessingPallet = {
 type InventoryUnit = {
   id: number;
   unitId: string;
+  publicUid: string | null;
+  labelStatus: string;
+  labelPrintCount: number;
+  labeledAt: string | null;
   unitNumber: number;
   palletId: number | null;
   sourcePalletId: number | null;
@@ -280,6 +285,141 @@ export default function ProcessingPanel({
     );
   }
 
+  async function printItemLabel(unit: InventoryUnit) {
+    if (!unit.publicUid) {
+      setError(
+        `${unit.unitId} does not have a public UID.`
+      );
+      return;
+    }
+
+    setWorking(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const qrDataUrl =
+        await QRCode.toDataURL(unit.publicUid, {
+          errorCorrectionLevel: "M",
+          margin: 1,
+          width: 320,
+        });
+
+      const printWindow = window.open(
+        "",
+        "_blank",
+        "width=520,height=680"
+      );
+
+      if (!printWindow) {
+        throw new Error(
+          "Could not open label print window. Allow pop-ups for LARCOOS."
+        );
+      }
+
+      const safeUnitId = unit.unitId
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+      printWindow.document.write(`
+        <!doctype html>
+        <html>
+          <head>
+            <title>${safeUnitId}</title>
+            <style>
+              @page { margin: 0.2in; }
+              body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                color: #000;
+              }
+              .label {
+                width: 3.6in;
+                min-height: 2.2in;
+                border: 2px solid #000;
+                padding: 0.14in;
+                box-sizing: border-box;
+              }
+              .brand {
+                font-size: 18px;
+                font-weight: 800;
+                letter-spacing: 1px;
+              }
+              .unit {
+                margin-top: 6px;
+                font-size: 16px;
+                font-weight: 700;
+              }
+              .identity {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 10px;
+              }
+              .identity img {
+                width: 1.25in;
+                height: 1.25in;
+              }
+              .uid {
+                max-width: 1.8in;
+                overflow-wrap: anywhere;
+                font-size: 9px;
+              }
+              .footer {
+                margin-top: 8px;
+                font-size: 9px;
+                font-weight: 700;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="label">
+              <div class="brand">LARCOOS</div>
+              <div class="unit">${safeUnitId}</div>
+              <div class="identity">
+                <img src="${qrDataUrl}" alt="LARCOOS QR" />
+                <div>
+                  <div><strong>ITEM ID</strong></div>
+                  <div class="uid">${unit.publicUid}</div>
+                </div>
+              </div>
+              <div class="footer">
+                Permanent asset identity — scan to record an event
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+
+      const data = await postAction({
+        action: "mark-label-printed",
+        publicUid: unit.publicUid,
+      });
+
+      if (!data) {
+        return;
+      }
+
+      setMessage(
+        `${unit.unitId} label recorded as printed.`
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not print item label"
+      );
+    } finally {
+      setWorking(false);
+    }
+  }
   async function moveUnit(unit: InventoryUnit) {
     const rawDestination =
       selectedDestinations[unit.id];
@@ -631,6 +771,9 @@ export default function ProcessingPanel({
                     Lineage
                   </th>
                   <th className="px-3 py-3">
+                    Identity / Label
+                  </th>
+                  <th className="px-3 py-3">
                     Move
                   </th>
                 </tr>
@@ -735,6 +878,47 @@ export default function ProcessingPanel({
                                 )
                               : "UNASSIGNED"}
                           </span>
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-4">
+                        <div className="min-w-[190px] space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-1 text-xs font-semibold">
+                              {readable(unit.labelStatus)}
+                            </span>
+
+                            {unit.labelPrintCount > 0 && (
+                              <span className="text-xs text-slate-500">
+                                {unit.labelPrintCount} print{unit.labelPrintCount === 1 ? "" : "s"}
+                              </span>
+                            )}
+                          </div>
+
+                          {unit.publicUid ? (
+                            <>
+                              <p className="max-w-[190px] break-all font-mono text-[10px] text-slate-600">
+                                {unit.publicUid}
+                              </p>
+
+                              <button
+                                type="button"
+                                disabled={working}
+                                onClick={() => {
+                                  void printItemLabel(unit);
+                                }}
+                                className="rounded-lg border border-blue-800 bg-blue-950/30 px-3 py-2 text-xs font-semibold text-blue-300 transition hover:border-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                {unit.labelPrintCount > 0
+                                  ? "Reprint Label"
+                                  : "Print Label"}
+                              </button>
+                            </>
+                          ) : (
+                            <p className="text-xs font-semibold text-amber-400">
+                              Public UID missing
+                            </p>
+                          )}
                         </div>
                       </td>
 

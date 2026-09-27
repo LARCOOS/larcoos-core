@@ -37,6 +37,10 @@ type ReceivingRecord = {
   forkliftUsed: boolean;
   forkliftName: string | null;
 
+  forkliftSafetyCheckedAt: string | null;
+  forkliftSafetyActorId: number | null;
+  forkliftSafetyNotes: string | null;
+
   dockDoor: string | null;
   notes: string | null;
 };
@@ -56,6 +60,15 @@ type Worker = {
   notes: string | null;
 };
 
+type OperationCheckIn = {
+  id: number;
+  receivingId: number;
+  actorId: number;
+  role: string;
+  checkedInAt: string;
+  checkedOutAt: string | null;
+  notes: string | null;
+};
 type ReceivingResponse = {
   success: boolean;
 
@@ -71,6 +84,8 @@ type ReceivingResponse = {
 
   receiving?: ReceivingRecord | null;
   workers?: Worker[];
+  currentActorId?: number;
+  operationCheckIns?: OperationCheckIn[];
 
   permissions?: {
     canEditCompletedRecords: boolean;
@@ -152,6 +167,23 @@ export default function ReceivingPanel({
     useState<ReceivingRecord | null>(null);
 
   const [workers, setWorkers] = useState<Worker[]>([]);
+  const [currentActorId, setCurrentActorId] = useState<number | null>(null);
+  const [operationCheckIns, setOperationCheckIns] = useState<OperationCheckIn[]>([]);
+  const [operationRole, setOperationRole] = useState("Receiver");
+  const [operationNotes, setOperationNotes] = useState("");
+  const [evidenceCategories, setEvidenceCategories] = useState<string[]>([]);
+  const [requestedEvidenceCategory, setRequestedEvidenceCategory] =
+    useState<string | null>(null);
+
+  const handleEvidenceCategoriesChange = useCallback(
+    (categories: string[]) => {
+      setEvidenceCategories(categories);
+    },
+    []
+  );
+
+  const hasEmptyTrailerEvidence =
+    evidenceCategories.includes("EMPTY_TRAILER");
 
   const [originName, setOriginName] = useState("");
   const [originCity, setOriginCity] = useState("");
@@ -225,6 +257,8 @@ export default function ReceivingPanel({
 
       setReceiving(record);
       setWorkers(data.workers ?? []);
+      setCurrentActorId(data.currentActorId ?? null);
+      setOperationCheckIns(data.operationCheckIns ?? []);
       setCanEditCompletedRecords(
         Boolean(data.permissions?.canEditCompletedRecords)
       );
@@ -314,6 +348,15 @@ export default function ReceivingPanel({
     receiving?.unloadingFinishedAt,
     receiving?.unloadingSeconds,
   ]);
+
+  const activeOperationCheckIn =
+    currentActorId === null
+      ? undefined
+      : operationCheckIns.find(
+          (checkIn) =>
+            checkIn.actorId === currentActorId &&
+            !checkIn.checkedOutAt
+        );
 
   const hasBeenReceived = Boolean(receiving?.receivedAt);
 
@@ -454,6 +497,76 @@ export default function ReceivingPanel({
     }
   }
 
+  async function checkInOperation() {
+    const role = operationRole.trim();
+
+    if (!role) {
+      setError("Role is required");
+      return;
+    }
+
+    try {
+      await postAction({
+        action: "check-in",
+        role,
+        notes: operationNotes.trim() || null,
+      });
+
+      setOperationNotes("");
+      setMessage(
+        "Operation check-in recorded in LARCOOS."
+      );
+    } catch {
+      // Error is already displayed by postAction.
+    }
+  }
+
+  async function checkOutOperation() {
+    try {
+      await postAction({
+        action: "check-out",
+      });
+
+      setMessage(
+        "Operation check-out recorded in LARCOOS."
+      );
+    } catch {
+      // Error is already displayed by postAction.
+    }
+  }
+  async function saveUnloadingSetup() {
+    try {
+      await postAction({
+        action: "save-unloading-setup",
+        forkliftUsed,
+        forkliftName:
+          forkliftUsed && forkliftName.trim()
+            ? forkliftName.trim()
+            : null,
+        dockDoor: dockDoor.trim() || null,
+      });
+
+      setMessage(
+        "Unloading setup saved in LARCOOS."
+      );
+    } catch {
+      // Error is already displayed by postAction.
+    }
+  }
+
+  async function completeForkliftSafetyCheck() {
+    try {
+      await postAction({
+        action: "forklift-safety-check",
+      });
+
+      setMessage(
+        "Forklift safety check completed and recorded."
+      );
+    } catch {
+      // Error is already displayed by postAction.
+    }
+  }
   async function startUnloading() {
     try {
       const validWorkers = workerDrafts
@@ -485,34 +598,6 @@ export default function ReceivingPanel({
 
       setMessage(
         "Unloading started. The persistent LARCOOS timer is now running."
-      );
-    } catch {
-      // Error is already displayed by postAction.
-    }
-  }
-
-  async function markNextPalletUnloaded() {
-    if (!unloadingRunning) {
-      return;
-    }
-
-    const nextPalletNumber = palletsUnloaded + 1;
-
-    if (nextPalletNumber > expectedPallets) {
-      return;
-    }
-
-    try {
-      await postAction({
-        action: "pallet-unloaded",
-        palletNumber: nextPalletNumber,
-      });
-
-      setMessage(
-        `Pallet ${String(nextPalletNumber).padStart(
-          2,
-          "0"
-        )} recorded as unloaded.`
       );
     } catch {
       // Error is already displayed by postAction.
@@ -992,6 +1077,158 @@ export default function ReceivingPanel({
         </div>
       </div>
 
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+        <div className="mb-5">
+          <h3 className="text-lg font-semibold text-white">
+            2. Operation Check-In
+          </h3>
+
+          <p className="mt-1 text-sm text-zinc-500">
+            Record authenticated personnel participating in this truckload operation.
+          </p>
+        </div>
+
+        {activeOperationCheckIn ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-emerald-900 bg-emerald-950/30 p-4">
+              <p className="text-sm font-semibold text-emerald-300">
+                CHECKED IN
+              </p>
+
+              <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">
+                    Role
+                  </p>
+                  <p className="mt-1 text-white">
+                    {activeOperationCheckIn.role}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">
+                    Checked In
+                  </p>
+                  <p className="mt-1 text-white">
+                    {formatDateTime(activeOperationCheckIn.checkedInAt)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">
+                    Actor ID
+                  </p>
+                  <p className="mt-1 text-white">
+                    {activeOperationCheckIn.actorId}
+                  </p>
+                </div>
+              </div>
+
+              {activeOperationCheckIn.notes && (
+                <p className="mt-3 text-sm text-zinc-400">
+                  {activeOperationCheckIn.notes}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={checkOutOperation}
+              disabled={working}
+              className="rounded-xl border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {working ? "CHECKING OUT..." : "CHECK OUT"}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Role
+                </span>
+
+                <select
+                  value={operationRole}
+                  onChange={(event) =>
+                    setOperationRole(event.target.value)
+                  }
+                  disabled={!hasBeenReceived || working}
+                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white outline-none focus:border-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {WORKER_ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Operation Notes
+                </span>
+
+                <input
+                  type="text"
+                  value={operationNotes}
+                  onChange={(event) =>
+                    setOperationNotes(event.target.value)
+                  }
+                  disabled={!hasBeenReceived || working}
+                  placeholder="Optional"
+                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </label>
+            </div>
+
+            {!hasBeenReceived && (
+              <p className="text-xs text-amber-300">
+                Receive the truck before checking in to the operation.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={checkInOperation}
+              disabled={!hasBeenReceived || working}
+              className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {working ? "CHECKING IN..." : "CHECK IN"}
+            </button>
+          </div>
+        )}
+
+        {operationCheckIns.length > 0 && (
+          <div className="mt-6 border-t border-zinc-800 pt-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Operation History
+            </p>
+
+            <div className="mt-3 space-y-2">
+              {operationCheckIns.map((checkIn) => (
+                <div
+                  key={checkIn.id}
+                  className="grid gap-2 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm md:grid-cols-4"
+                >
+                  <span className="text-zinc-300">
+                    Actor {checkIn.actorId}
+                  </span>
+                  <span className="text-zinc-300">
+                    {checkIn.role}
+                  </span>
+                  <span className="text-zinc-500">
+                    In: {formatDateTime(checkIn.checkedInAt)}
+                  </span>
+                  <span className="text-zinc-500">
+                    Out: {formatDateTime(checkIn.checkedOutAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       <div
         className={[
           "rounded-2xl border p-5",
@@ -1002,7 +1239,7 @@ export default function ReceivingPanel({
       >
         <div className="mb-5">
           <h3 className="text-lg font-semibold text-white">
-            2. Unloading Setup
+            3. Unloading Setup
           </h3>
 
           <p className="mt-1 text-sm text-zinc-500">
@@ -1058,6 +1295,87 @@ export default function ReceivingPanel({
           />
         </div>
 
+        {!unloadingRunning &&
+          !unloadingFinished &&
+          hasBeenReceived && (
+            <div className="mt-5 space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5">
+              <div>
+                <h4 className="font-medium text-white">
+                  Equipment Readiness
+                </h4>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Save the unloading setup before starting the operation.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={saveUnloadingSetup}
+                  disabled={working}
+                  className="rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {working ? "SAVING..." : "SAVE SETUP"}
+                </button>
+              </div>
+
+              {forkliftUsed && (
+                <div
+                  className={[
+                    "rounded-xl border p-4",
+                    receiving?.forkliftSafetyCheckedAt
+                      ? "border-emerald-900 bg-emerald-950/20"
+                      : "border-amber-900 bg-amber-950/20",
+                  ].join(" ")}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        Forklift Safety Check
+                      </p>
+
+                      {receiving?.forkliftSafetyCheckedAt ? (
+                        <p className="mt-1 text-xs text-emerald-300">
+                          COMPLETED ·{" "}
+                          {formatDateTime(
+                            receiving.forkliftSafetyCheckedAt
+                          )}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-amber-300">
+                          REQUIRED BEFORE START UNLOADING
+                        </p>
+                      )}
+                    </div>
+
+                    {!receiving?.forkliftSafetyCheckedAt && (
+                      <button
+                        type="button"
+                        onClick={completeForkliftSafetyCheck}
+                        disabled={
+                          working ||
+                          !receiving?.forkliftUsed
+                        }
+                        className="rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {working
+                          ? "RECORDING..."
+                          : "COMPLETE SAFETY CHECK"}
+                      </button>
+                    )}
+                  </div>
+
+                  {!receiving?.forkliftUsed &&
+                    !receiving?.forkliftSafetyCheckedAt && (
+                      <p className="mt-3 text-xs text-zinc-500">
+                        Save Setup first so the selected forklift is
+                        registered in LARCOOS.
+                      </p>
+                    )}
+                </div>
+              )}
+            </div>
+          )}
         {(completedRecord || editingCompletedRecord) && (
           <div className="mt-4">
             <label className="space-y-2">
@@ -1269,116 +1587,6 @@ export default function ReceivingPanel({
             : "border-zinc-800 bg-zinc-900/40",
         ].join(" ")}
       >
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-white">
-              3. Pallet Unloading Sequence
-            </h3>
-
-            <p className="mt-1 text-sm text-zinc-500">
-              Register each pallet as it physically leaves the
-              trailer.
-            </p>
-          </div>
-
-          <div className="text-left md:text-right">
-            <p className="text-3xl font-semibold text-white">
-              {palletsUnloaded}/{expectedPallets}
-            </p>
-
-            <p className="text-xs uppercase tracking-wide text-zinc-500">
-              Pallets Unloaded
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-          {Array.from(
-            { length: expectedPallets },
-            (_, index) => {
-              const palletNumber = index + 1;
-              const isUnloaded =
-                palletNumber <= palletsUnloaded;
-
-              const isNext =
-                palletNumber === palletsUnloaded + 1 &&
-                unloadingRunning;
-
-              return (
-                <div
-                  key={palletNumber}
-                  className={[
-                    "rounded-xl border p-3 text-center",
-                    isUnloaded
-                      ? "border-emerald-900 bg-emerald-950/30"
-                      : isNext
-                      ? "border-amber-700 bg-amber-950/20"
-                      : "border-zinc-800 bg-zinc-950",
-                  ].join(" ")}
-                >
-                  <p
-                    className={[
-                      "text-sm font-semibold",
-                      isUnloaded
-                        ? "text-emerald-300"
-                        : isNext
-                        ? "text-amber-300"
-                        : "text-zinc-500",
-                    ].join(" ")}
-                  >
-                    P{String(palletNumber).padStart(2, "0")}
-                  </p>
-
-                  <p className="mt-1 text-[10px] uppercase tracking-wide text-zinc-600">
-                    {isUnloaded
-                      ? "Unloaded"
-                      : isNext
-                      ? "Next"
-                      : "Waiting"}
-                  </p>
-                </div>
-              );
-            }
-          )}
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={markNextPalletUnloaded}
-            disabled={
-              working ||
-              !unloadingRunning ||
-              palletsUnloaded >= expectedPallets
-            }
-            className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {working
-              ? "SAVING..."
-              : palletsUnloaded >= expectedPallets
-              ? "ALL PALLETS UNLOADED"
-              : `UNLOAD NEXT PALLET — P${String(
-                  palletsUnloaded + 1
-                ).padStart(2, "0")}`}
-          </button>
-
-          <div className="rounded-xl border border-zinc-800 px-4 py-3 text-sm text-zinc-400">
-            Remaining:{" "}
-            <span className="font-semibold text-white">
-              {remainingPallets}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={[
-          "rounded-2xl border p-5",
-          completedRecord
-            ? "border-emerald-900 bg-emerald-950/10"
-            : "border-zinc-800 bg-zinc-900/40",
-        ].join(" ")}
-      >
         <h3 className="text-lg font-semibold text-white">
           4. Finish Unloading
         </h3>
@@ -1395,13 +1603,13 @@ export default function ReceivingPanel({
           />
 
           <MetricCard
-            label="Completed"
-            value={`${palletsUnloaded} pallets`}
+            label="Expected Load"
+            value={`${expectedPallets} pallets`}
           />
 
           <MetricCard
-            label="Remaining"
-            value={`${remainingPallets} pallets`}
+            label="Unload Mode"
+            value="Continuous"
           />
 
           <MetricCard
@@ -1412,6 +1620,47 @@ export default function ReceivingPanel({
           />
         </div>
 
+        <div
+          className={[
+            "mt-5 rounded-xl border p-4",
+            hasEmptyTrailerEvidence
+              ? "border-emerald-900 bg-emerald-950/20"
+              : "border-amber-900 bg-amber-950/20",
+          ].join(" ")}
+        >
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-white">
+                Empty Trailer Photo
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                Required after physical unloading and before the operation can be closed.
+              </p>
+            </div>
+
+            {hasEmptyTrailerEvidence ? (
+              <span className="text-xs font-semibold text-emerald-300">
+                PHOTO REGISTERED
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() =>
+                  setRequestedEvidenceCategory("EMPTY_TRAILER")
+                }
+                disabled={
+                  working ||
+                  !unloadingRunning ||
+                  unloadingFinished
+                }
+                className="rounded-lg border border-amber-700 bg-amber-950/30 px-4 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-950/60 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                TAKE / UPLOAD EMPTY TRAILER PHOTO
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="mt-6">
           <button
             type="button"
@@ -1419,7 +1668,7 @@ export default function ReceivingPanel({
             disabled={
               working ||
               !unloadingRunning ||
-              palletsUnloaded !== expectedPallets
+              !hasEmptyTrailerEvidence
             }
             className="rounded-xl border border-zinc-600 bg-zinc-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -1427,16 +1676,10 @@ export default function ReceivingPanel({
               ? "FINISHING..."
               : unloadingFinished
               ? "UNLOADING COMPLETED"
+              : !hasEmptyTrailerEvidence
+              ? "EMPTY TRAILER PHOTO REQUIRED"
               : "FINISH UNLOADING"}
           </button>
-
-          {unloadingRunning &&
-            palletsUnloaded !== expectedPallets && (
-              <p className="mt-3 text-xs text-zinc-500">
-                Finish becomes available after all{" "}
-                {expectedPallets} pallets are recorded.
-              </p>
-            )}
         </div>
       </div>
 
@@ -1444,6 +1687,9 @@ export default function ReceivingPanel({
         <ReceivingEvidencePanel
           truckloadId={truckloadId}
           truckloadCode={truckloadCode}
+          onCategoriesChange={handleEvidenceCategoriesChange}
+          requestCategory={requestedEvidenceCategory}
+          onRequestHandled={() => setRequestedEvidenceCategory(null)}
         />
       )}
     </section>

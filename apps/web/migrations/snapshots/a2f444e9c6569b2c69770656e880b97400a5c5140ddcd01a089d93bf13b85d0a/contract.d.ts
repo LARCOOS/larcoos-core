@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'05e2da62be0f80c9687ce00202e747bdf0f5308fac555a3ae457037110318f0e'>;
+  StorageHashBase<'a2f444e9c6569b2c69770656e880b97400a5c5140ddcd01a089d93bf13b85d0a'>;
 export type ExecutionHash =
   ExecutionHashBase<'dd9348fd100b63f5159d8005dd89b4ad74d1fadd6e2aba9b058e5e445b43487b'>;
 export type ProfileHash =
@@ -314,11 +314,6 @@ export type FieldOutputTypes = {
     readonly InventoryUnit: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly unitId: CodecTypes['pg/text@1']['output'];
-      readonly publicUid: CodecTypes['pg/text@1']['output'] | null;
-      readonly labelStatus: CodecTypes['pg/text@1']['output'];
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['output'];
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly organizationId: CodecTypes['pg/int4@1']['output'];
       readonly truckloadId: CodecTypes['pg/int4@1']['output'];
       readonly palletId: CodecTypes['pg/int4@1']['output'] | null;
@@ -665,11 +660,6 @@ export type FieldInputTypes = {
     readonly InventoryUnit: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly unitId: CodecTypes['pg/text@1']['input'];
-      readonly publicUid: CodecTypes['pg/text@1']['input'] | null;
-      readonly labelStatus: CodecTypes['pg/text@1']['input'];
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['input'];
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly organizationId: CodecTypes['pg/int4@1']['input'];
       readonly truckloadId: CodecTypes['pg/int4@1']['input'];
       readonly palletId: CodecTypes['pg/int4@1']['input'] | null;
@@ -1026,10 +1016,6 @@ export type StorageColumnTypes = {
       readonly description: CodecTypes['pg/text@1']['output'] | null;
       readonly disposition: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['output'];
-      readonly labelStatus: CodecTypes['pg/text@1']['output'];
       readonly manufacturer: CodecTypes['pg/text@1']['output'] | null;
       readonly model: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
@@ -1037,7 +1023,6 @@ export type StorageColumnTypes = {
       readonly palletId: CodecTypes['pg/int4@1']['output'] | null;
       readonly processedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly processingStatus: CodecTypes['pg/text@1']['output'];
-      readonly publicUid: CodecTypes['pg/text@1']['output'] | null;
       readonly serialNumber: CodecTypes['pg/text@1']['output'] | null;
       readonly sku: CodecTypes['pg/text@1']['output'] | null;
       readonly sourcePalletId: CodecTypes['pg/int4@1']['output'] | null;
@@ -1377,10 +1362,6 @@ export type StorageColumnInputTypes = {
       readonly description: CodecTypes['pg/text@1']['input'] | null;
       readonly disposition: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly identifiedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly labeledAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly labelPrintCount: CodecTypes['pg/int4@1']['input'];
-      readonly labelStatus: CodecTypes['pg/text@1']['input'];
       readonly manufacturer: CodecTypes['pg/text@1']['input'] | null;
       readonly model: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
@@ -1388,7 +1369,6 @@ export type StorageColumnInputTypes = {
       readonly palletId: CodecTypes['pg/int4@1']['input'] | null;
       readonly processedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly processingStatus: CodecTypes['pg/text@1']['input'];
-      readonly publicUid: CodecTypes['pg/text@1']['input'] | null;
       readonly serialNumber: CodecTypes['pg/text@1']['input'] | null;
       readonly sku: CodecTypes['pg/text@1']['input'] | null;
       readonly sourcePalletId: CodecTypes['pg/int4@1']['input'] | null;
@@ -1903,11 +1883,6 @@ export namespace Models {
   export type public_InventoryUnit = {
     id: CodecTypes['pg/int4@1']['output'];
     unitId: CodecTypes['pg/text@1']['output'];
-    publicUid: CodecTypes['pg/text@1']['output'] | null;
-    labelStatus: CodecTypes['pg/text@1']['output'];
-    labelPrintCount: CodecTypes['pg/int4@1']['output'];
-    labeledAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-    identifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     organizationId: CodecTypes['pg/int4@1']['output'];
     truckloadId: CodecTypes['pg/int4@1']['output'];
     palletId: CodecTypes['pg/int4@1']['output'] | null;
@@ -2663,39 +2638,6 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
-                readonly publicUid: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly labelStatus: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'PENDING'>;
-                  };
-                };
-                readonly labelPrintCount: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
-                  };
-                };
-                readonly labeledAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
-                readonly identifiedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
-                };
                 readonly organizationId: {
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
@@ -2857,7 +2799,6 @@ type ContractBase = Omit<
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [
                 { readonly columns: readonly ['unitId'] },
-                { readonly columns: readonly ['publicUid'] },
                 { readonly columns: readonly ['truckloadId', 'unitNumber'] },
               ];
               indexes: readonly [
@@ -2865,18 +2806,6 @@ type ContractBase = Omit<
                   readonly name: 'inventoryUnit_organizationId_idx_2e17ef41';
                   readonly prefix: 'inventoryUnit_organizationId_idx';
                   readonly columns: readonly ['organizationId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_publicUid_idx_2beee8e8';
-                  readonly prefix: 'inventoryUnit_publicUid_idx';
-                  readonly columns: readonly ['publicUid'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'inventoryUnit_labelStatus_idx_d475cb83';
-                  readonly prefix: 'inventoryUnit_labelStatus_idx';
-                  readonly columns: readonly ['labelStatus'];
                   readonly unique: false;
                 },
                 {
@@ -5398,32 +5327,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly publicUid: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly labelStatus: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly labelPrintCount: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly labeledAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly identifiedAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
               readonly organizationId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -5553,11 +5456,6 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly id: { readonly column: 'id' };
                 readonly unitId: { readonly column: 'unitId' };
-                readonly publicUid: { readonly column: 'publicUid' };
-                readonly labelStatus: { readonly column: 'labelStatus' };
-                readonly labelPrintCount: { readonly column: 'labelPrintCount' };
-                readonly labeledAt: { readonly column: 'labeledAt' };
-                readonly identifiedAt: { readonly column: 'identifiedAt' };
                 readonly organizationId: { readonly column: 'organizationId' };
                 readonly truckloadId: { readonly column: 'truckloadId' };
                 readonly palletId: { readonly column: 'palletId' };

@@ -33,6 +33,7 @@ const CONDITIONS = [
 ] as const;
 
 const DISPOSITIONS = [
+  "PENDING_CLASSIFICATION",
   "SALE_READY",
   "CLEANING",
   "REPAIR",
@@ -573,7 +574,7 @@ export async function POST(request: Request) {
 
       const verificationLevel = String(
         body.verificationLevel ??
-          "PHYSICALLY_VERIFIED"
+          "MANIFEST_ONLY"
       ).trim();
 
       if (
@@ -593,7 +594,7 @@ export async function POST(request: Request) {
       }
 
       const disposition = String(
-        body.disposition ?? "SALE_READY"
+        body.disposition ?? "PENDING_CLASSIFICATION"
       ).trim();
 
       if (
@@ -662,10 +663,17 @@ export async function POST(request: Request) {
           nextUnitNumber
         ).padStart(4, "0")}`;
 
+      const publicUid = randomUUID();
+      const identifiedAt = new Date().toISOString();
+
       const unit =
         await db.orm.public.InventoryUnit
           .create({
             unitId,
+            publicUid,
+            labelStatus: "READY",
+            labelPrintCount: 0,
+            identifiedAt,
 
             organizationId:
               truckload.organizationId!,
@@ -725,7 +733,7 @@ export async function POST(request: Request) {
             disposition,
 
             processingStatus:
-              "PROCESSED",
+              "IDENTIFIED",
 
             assignedCost,
 
@@ -745,8 +753,7 @@ export async function POST(request: Request) {
             notes:
               optionalText(body.notes),
 
-            processedAt:
-              new Date().toISOString(),
+            processedAt: null,
           });
 
       await db.orm.public.Pallet
@@ -766,6 +773,10 @@ export async function POST(request: Request) {
         entityCode: unit.unitId,
         payload: {
           unitId: unit.unitId,
+          publicUid: unit.publicUid,
+          labelStatus: unit.labelStatus,
+          identifiedAt: unit.identifiedAt,
+          processingStatus: unit.processingStatus,
           unitNumber:
             unit.unitNumber,
           palletId:
@@ -805,6 +816,96 @@ export async function POST(request: Request) {
       );
     }
 
+    if (action === "mark-label-printed") {
+      const publicUid =
+        String(body.publicUid ?? "").trim();
+
+      if (!publicUid) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "publicUid is required",
+          },
+          { status: 400 }
+        );
+      }
+
+      const unit =
+        await db.orm.public.InventoryUnit
+          .where({
+            publicUid,
+            truckloadId: truckload.id,
+          })
+          .first();
+
+      if (!unit) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Inventory unit not found",
+          },
+          { status: 404 }
+        );
+      }
+
+      if (!unit.publicUid) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Inventory unit has no public identity",
+          },
+          { status: 409 }
+        );
+      }
+
+      const printedAt =
+        new Date().toISOString();
+
+      const labelPrintCount =
+        unit.labelPrintCount + 1;
+
+      const updatedUnit =
+        await db.orm.public.InventoryUnit
+          .where({ id: unit.id })
+          .update({
+            labelStatus: "PRINTED",
+            labelPrintCount,
+            labeledAt:
+              unit.labeledAt ?? printedAt,
+          });
+
+      if (!updatedUnit) {
+        throw new Error(
+          "Inventory unit label update failed"
+        );
+      }
+
+      await createProcessingEvent({
+        eventType: "ITEM_LABEL_PRINTED",
+        truckload,
+        actorId: actor.id,
+        entityType: "ITEM",
+        entityId: unit.publicUid,
+        entityCode: unit.unitId,
+        payload: {
+          unitId: unit.unitId,
+          publicUid: unit.publicUid,
+          labelStatus: "PRINTED",
+          labelPrintCount,
+          labeledAt:
+            updatedUnit.labeledAt,
+          printedAt,
+          reprint:
+            labelPrintCount > 1,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        action: "mark-label-printed",
+        unit: serializeUnit(updatedUnit),
+      });
+    }
     if (action === "complete-pallet") {
       const palletId = Number(body.palletId);
 

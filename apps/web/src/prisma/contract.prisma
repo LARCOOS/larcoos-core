@@ -788,6 +788,19 @@ model InventoryUnit {
   // LDC-2026-001-P01-I0001
   unitId String @unique
 
+  // Permanent opaque identity used by QR labels and scanners.
+  // Unlike unitId, this value does not encode operational structure
+  // and must never be reused when the item changes pallet/location.
+  publicUid String? @unique
+
+  // Physical label lifecycle.
+  // PENDING -> READY -> PRINTED. Reprints increment labelPrintCount
+  // without changing publicUid or the item's permanent identity.
+  labelStatus     String @default("PENDING")
+  labelPrintCount Int    @default(0)
+  labeledAt       TimestamptzString?
+  identifiedAt    TimestamptzString?
+
   organizationId Int
   truckloadId    Int
 
@@ -832,6 +845,8 @@ model InventoryUnit {
   // BACKYARD
   // SALVAGE
   // DISPOSAL
+  // A newly identified/countable item is not automatically sale-ready.
+  // Commercial disposition must be decided explicitly later.
   disposition String @default("SALE_READY")
 
   // Processing state is independent from commercial state.
@@ -859,6 +874,8 @@ model InventoryUnit {
 
   @@unique([truckloadId, unitNumber])
   @@index([organizationId])
+  @@index([publicUid])
+  @@index([labelStatus])
   @@index([truckloadId])
   @@index([palletId])
   @@index([sourcePalletId])
@@ -951,6 +968,13 @@ model TruckReceiving {
   forkliftUsed Boolean @default(false)
   forkliftName String?
 
+  // Forklift safety clearance is a separate operational fact.
+  // START UNLOADING must not proceed when forklift use is
+  // required until this check has been completed.
+  forkliftSafetyCheckedAt TimestamptzString?
+  forkliftSafetyActorId   Int?
+  forkliftSafetyNotes     String?
+
   dockDoor String?
   notes    String?
 
@@ -960,7 +984,8 @@ model TruckReceiving {
     onDelete: Cascade
   )
 
-  workers UnloadingWorker[]
+  workers           UnloadingWorker[]
+  operationCheckIns TruckloadOperationCheckIn[]
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -988,6 +1013,45 @@ model TruckReceiving {
 // Actor -> OrganizationMembership -> Organization
 // ============================================================
 
+// ============================================================
+// LDC — TRUCKLOAD OPERATION CHECK-INS
+//
+// Permanent assignment/check-in to a specific receiving
+// operation. This is separate from employee workday attendance
+// and separate from measured unloading participation.
+// ============================================================
+
+model TruckloadOperationCheckIn {
+  id          Int @id @default(autoincrement())
+  receivingId Int
+  actorId     Int
+
+  role String
+
+  checkedInAt  TimestamptzString @default(now())
+  checkedOutAt TimestamptzString?
+
+  notes String?
+
+  receiving TruckReceiving @relation(
+    fields: [receivingId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  actor Actor @relation(
+    fields: [actorId],
+    references: [id],
+    onDelete: Restrict
+  )
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@index([receivingId])
+  @@index([actorId])
+  @@index([checkedInAt])
+}
 model UnloadingWorker {
   id          Int @id @default(autoincrement())
   receivingId Int
